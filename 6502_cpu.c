@@ -59,7 +59,7 @@ void cpu_step(CPU *cpu)
     uint16_t addr = inst.addrmode(cpu, &page_crossed);
 
     inst.operate(cpu, addr);
-
+// THIS IS WRONG NOW?
     int cycles += inst.cycles;
     if (page_crossed && inst.add_cycle_on_page_cross) {
     cycles++;
