@@ -47,7 +47,7 @@ static int Disassemble_6502(unsigned char *codebuffer,int pc)
         //ADC
         case 0x69: sprintf(opstr,"ADC #$%02x",opcodes[1]);count=2;cycles=2;break; //Immediate
         case 0x65: sprintf(opstr,"ADC $%02x",opcodes[1]);count=2;cycles=2;break; //Zero Page
-        case 0x75: sprintf(opstr,"ADC #$%02x",opcodes[1]);count=2;cycles=2;break; //Immediate
+        case 0x75: sprintf(opstr,"ADC #$%02x",opcodes[1]);count=2;cycles=2;break; //Zero Page, X
 
         
         case 0x00: sprintf(opstr,"BRK");break;
@@ -78,6 +78,11 @@ static int Disassemble_6502(unsigned char *codebuffer,int pc)
             printf("\t\t;$%04x", 0x5000+pc+2+(int8_t)opcodes[1]); // Print branch target
     }
     return count;
+}
+
+void ADC(State6502 *state,char addressing_mode)
+{
+    return 0;
 }
 
 static int Emulate_6502(State6502 state, unsigned char *codebuffer)
