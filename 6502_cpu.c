@@ -16,8 +16,8 @@ void cpu_init(CPU *cpu) {
     cpu->a = 0;
     cpu->x = 0;
     cpu->y = 0;
-    cpu->sp = 0xFD;
-    cpu->status = 0x24;
+    cpu->s = 0xFD;
+    cpu->p = 0x24;
     cpu->pc = 0;
 }
 

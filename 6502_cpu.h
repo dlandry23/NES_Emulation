@@ -6,8 +6,8 @@ struct CPU outline registers -> a couple of placeholder functions for reset, ini
 
 typedef struct CPU {
     uint8_t a, x, y;
-    uint8_t sp;
-    uint8_t status;
+    uint8_t s; //Stack Pointer
+    uint8_t p; //Status Register
     uint16_t pc;
 } CPU;
 

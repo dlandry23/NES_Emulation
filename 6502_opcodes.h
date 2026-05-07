@@ -8,5 +8,7 @@ void command(CPU*, uint16_t) --- uint16_t because program counter is 16bits/2byt
 #include <stdint.h>
 #include "6502_cpu.h"//Access to CPU typedef stuct{}
 
-void adc(CPU *cpu, uint16_t addr);
+//Arithmetic
+void adc(CPU *cpu, uint16_t addr); // Add with Carry
+void sbc(CPU *cpu, uint16_t addr); // Subtract with Borrow
 // CONTINUE ON DOWN FOR ALL (organize by function type to make it easier to read)
