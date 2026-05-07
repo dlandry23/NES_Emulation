@@ -10,13 +10,16 @@ read memory/->fetch next op code -> pass this to main() where it runs it
 #include "6502_cpu.h"
 #include "6502_opcodes.h"
 #include "6502_addrmodes.h"
+#include "NES_ppu.h"
+#include "NES_apu.h"
+#include "NES_mapper.h"
 
 void cpu_init(CPU *cpu) {
     // TODO: initialize CPU state
     cpu->a = 0;
     cpu->x = 0;
     cpu->y = 0;
-    cpu->s = 0xFD;
+    cpu->s = 0xFD; // top of the stack on reset
     cpu->p = 0x24;
     cpu->pc = 0;
 }
@@ -64,4 +67,47 @@ void cpu_step(CPU *cpu)
     if (page_crossed && inst.add_cycle_on_page_cross) {
     cycles++;
 }
-};
+}
+
+uint8_t bus_read (BUS *bus, uint16_t addr)
+{
+    if (addr < 0x2000) //RAM - mirrors every 0x0800
+    {
+        return bus->ram[addr & 0x07FF];
+    }
+    else if (addr < 0x4000) //PPU - registers mirrored every 8 bytes
+    {
+        return ppu_read(bus->ppu,0x2000 + (addr & 0x0007));
+    }
+    else if (addr < 0x4018) //APU and I/O registers
+    {
+        return apu_read(bus->apu,addr);
+    }
+    else if (addr >=0x8000) //PRG_ROM
+    {
+        return bus->rom[addr];  // give the address of what is currently there in rom 
+                                // (may need to take this out of "Bus" - as it may not be exactly represented accurately)
+    }
+    return 0x00; // open bus behaviour
+}
+
+void bus_write (BUS *bus, uint16_t addr, uint8_t data)
+{
+    if (addr < 0x2000)
+    {
+        bus->ram[addr & 0x07FF] = data;
+    }
+    else if (addr < 0x4000) //PPU - registers mirrored every 8 bytes
+    {
+        ppu_write(bus->ppu,0x2000 + (addr & 0x0007),data);
+    }
+    else if (addr < 0x4018) //APU and I/O registers
+    {
+        apu_write(bus->apu,addr,data);
+    }
+    else if (addr >=0x8000) //PRG_ROM
+    {
+        mapper_write(bus->rom,addr,data); // IDK what this looks like - need to straighten this out!
+    }
+
+}
