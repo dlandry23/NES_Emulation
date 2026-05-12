@@ -23,11 +23,17 @@ void txs(CPU *cpu, uint16_t addr);
 void tya(CPU *cpu, uint16_t addr);
 
 //Stack Instructions
-void pha(CPU *cpu);
-void php(CPU *cpu);
-void pla(CPU *cpu);
-void plp(CPU *cpu);
-
+void pha(CPU *cpu, BUS *bus);
+void php(CPU *cpu, BUS *bus);
+void pla(CPU *cpu, BUS *bus);
+void plp(CPU *cpu, BUS *bus);
+//Decrements & Increments
+void dec(CPU *cpu, BUS *bus, uint16_t addr);
+void dex(CPU *cpu);
+void dey(CPU *cpu);
+void inc(CPU *cpu, BUS *bus, uint16_t addr);
+void inx(CPU *cpu);
+void iny(CPU *cpu);
 //Arithmetic
 void adc(CPU *cpu, uint16_t addr); // Add with Carry
 void sbc(CPU *cpu, uint16_t addr); // Subtract with Borrow

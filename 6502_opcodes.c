@@ -17,10 +17,10 @@ Zero            (Z) -> Accumulator = Zero
 Carry           (C) -> See if uint16_t sum contains values in hi-byte
 */
 
-static inline void set_zn(uint8_t *p)
+static inline void set_zn(uint8_t *p, uint8_t data)
 {
-    (*p & 0x80) ? SET_FLAG(*p,FLAG_N) : CLR_FLAG(*p, FLAG_N); 
-    ((*p)==0x00) ? SET_FLAG(*p,FLAG_Z) : CLR_FLAG(*p, FLAG_Z); 
+    (data & 0x80) ? SET_FLAG(*p,FLAG_N) : CLR_FLAG(*p, FLAG_N); 
+    (data==0x00) ? SET_FLAG(*p,FLAG_Z) : CLR_FLAG(*p, FLAG_Z); 
     /*
     //Negative (N)
     (((cpu->a) >>0x07) & 1u) ? SET_FLAG(cpu->p,FLAG_N) : CLR_FLAG(cpu->p, FLAG_N); //Check if 1 in bit 7 of A
@@ -47,17 +47,17 @@ TYA - Transfer Y to Accumulator
 void lda(CPU *cpu, uint16_t addr)
 {
     cpu->a = cpu_read(addr);
-    set_zn(cpu->p);
+    set_zn(&cpu->p, cpu->a);
 }
 void ldx(CPU *cpu, uint16_t addr)
 {
     cpu->x = cpu_read(addr);
-    set_zn(cpu->p);
+    set_zn(&cpu->p, cpu->x);
 }
 void ldy(CPU *cpu, uint16_t addr)
 {
     cpu->y = cpu_read(addr);
-    set_zn(cpu->p);
+    set_zn(&cpu->p, cpu->y);
 }
 void sta(CPU *cpu, uint16_t addr)
 {
@@ -74,32 +74,32 @@ void sty(CPU *cpu, uint16_t addr)
 void tax(CPU *cpu, uint16_t addr)
 {
     cpu->x = cpu->a;
-    set_zn(cpu->p);
+    set_zn(&cpu->p, cpu->x);
 }
 void tay(CPU *cpu, uint16_t addr)
 {
     cpu->y = cpu->a;
-    set_zn(cpu->p);
+    set_zn(&cpu->p, cpu->y);
 }
 void tsx(CPU *cpu, uint16_t addr)
 {
     cpu->x = cpu->s;
-    set_zn(cpu->p);
+    set_zn(&cpu->p, cpu->x);
 }
 void txa(CPU *cpu, uint16_t addr)
 {
     cpu->a = cpu->x;
-    set_zn(cpu->p);
+    set_zn(&cpu->p, cpu->a);
 }
 void txs(CPU *cpu, uint16_t addr)
 {
     cpu->s = cpu->x;
-    set_zn(cpu->p);
+    set_zn(&cpu->p, cpu->s);
 }
 void tya(CPU *cpu, uint16_t addr)
 {
     cpu->a = cpu->y;
-    set_zn(cpu->p);
+    set_zn(&cpu->p, cpu->a);
 }
 
 // Stack Instructions
@@ -109,26 +109,63 @@ PHP - Push Processor Status Register tp stack (with break flag set)
 PLA - Pull Accumulator off stack
 PLP - Pull processor status register off stack
 */
-void pha(CPU *cpu)
+void pha(CPU *cpu, BUS *bus)
 {
-    write_cpu((0x0100|cpu->s),cpu->a); //(0x0100|cpu->s) -> Stack at location 0x0100-0x01FF - 256 bits set at page 1
+    bus_write(bus,(0x0100|cpu->s),cpu->a); //(0x0100|cpu->s) -> Stack at location 0x0100-0x01FF - 256 bits set at page 1
     cpu->s--;
 }
-void php(CPU *cpu)
+void php(CPU *cpu,BUS *bus)
 {
-    write_cpu((0x0100|cpu->s),cpu->a);
+    bus_write(bus,(0x0100|cpu->s),cpu->a);
     cpu->s--;
 }
-void pla(CPU *cpu)
+void pla(CPU *cpu,BUS *bus)
 {
-    cpu->a = cpu_read(cpu->s);
+    cpu->a = bus_read(bus, cpu->s);
     cpu->s++;
 }
-void plp(CPU *cpu)
+void plp(CPU *cpu,BUS *bus)
 {
-    cpu->p = cpu_read(cpu->s);
+    cpu->p = bus_read(bus, cpu->s);
     cpu->s++;
 }
+
+// Decrements & Increments
+void dec(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    data--;
+    bus_write(bus,addr, data);
+    set_zn(&cpu->p, data);
+}
+void dex(CPU *cpu)
+{
+    cpu->x--;
+    set_zn(&cpu->p, cpu->x);
+}
+void dey(CPU *cpu)
+{
+    cpu->y--;
+    set_zn(&cpu->p, cpu->y);
+}
+void inc(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    data++;
+    bus_write(bus,addr,data);
+    set_zn(&cpu->p,data);
+}
+void inx(CPU *cpu)
+{
+    cpu->x++;
+    set_zn(&cpu->p, cpu->x);
+}
+void iny(CPU *cpu)
+{
+    cpu->y++;
+    set_zn(&cpu->p, cpu->y);
+}
+
 // Arithmatic Functions
 /*
 ADC - Add Memory to Accumulator with Carry
@@ -145,7 +182,7 @@ void adc(CPU *cpu, uint16_t addr)
 
     cpu->a = sum & 0xFF;
     //Status Flag Updates
-    set_zn(cpu->p);
+    set_zn(&cpu->p,cpu->a);
     //Carry (C)
     (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
 
@@ -161,7 +198,7 @@ void sbc(CPU *cpu, uint16_t addr)
 
     cpu->a = sum & 0xFF;
     //Status Flag Updates
-    set_zn(cpu->p);
+    set_zn(&cpu->p,cpu->a);
     //Carry (C)
     (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
 }

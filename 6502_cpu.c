@@ -17,6 +17,7 @@ read memory/->fetch next op code -> pass this to main() where it runs it
 #include "NES_ppu.h"
 #include "NES_apu.h"
 #include "NES_mapper.h"
+#include "NES_file.h"
 
 void cpu_init(CPU *cpu) {
     // TODO: initialize CPU state
@@ -72,6 +73,10 @@ void init_table() {
     memcpy(&state->memory[offset],&buffer_rom[(0x4000*(prg_bnk_num-0x4))+0x10],0x10000);
     //return buffer_rom;*/
 //Initialize Banks
+void init_banks (BUS *bus)
+{
+    bus ->prg_banks[0];
+}
 //CPU STEP
 
 void cpu_step(CPU *cpu)

@@ -2,7 +2,6 @@
 NES_ppu.h
 */
 #include <stdint.h>
-#include "6502_cpu.h"
 
 typedef struct PPU
 {

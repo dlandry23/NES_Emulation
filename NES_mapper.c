@@ -2,8 +2,10 @@
 NES_mapper.c - we  are using MMC3 - just doing for that one for now
 */
 #include "NES_mapper.h"
+#include "6502_cpu.h"
+
 void bank_switch(BUS *bus,uint8_t data)
-{
+{    
     uint8_t target      =  bus->mapper.bank_select & 0x07;
     uint8_t prg_mode    = (bus->mapper.bank_select >> 6) & 0x01;
     uint8_t chr_inv     = (bus->mapper.bank_select >> 7) & 0x01;

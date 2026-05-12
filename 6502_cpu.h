@@ -4,8 +4,7 @@ struct CPU outline registers -> a couple of placeholder functions for reset, ini
 */
 #include <stdint.h>
 
-#include "NES_mapper.h"
-#include "NES_file.h"
+
 
 typedef struct CPU {
     uint8_t a, x, y;
@@ -13,6 +12,7 @@ typedef struct CPU {
     uint8_t p; //Status Register
     uint16_t pc; // Program Counter (address essentially)
 } CPU;
+
 
 typedef struct {
     void (*operate)(CPU*, uint16_t);
@@ -22,16 +22,10 @@ typedef struct {
 
 typedef struct BUS {
     uint8_t ram[0x0800];
-    
-    /*uint8_t rom[0x8000];
-    uint8_t *prg_rom;
-    uint32_t prg_size;
-
-    void *cart;*/
     uint8_t *prg_banks[0x04];
     uint8_t *chr_banks[0x06];
-    struct MAPPER mapper;
-    struct NESfile rom_file;
+    struct MAPPER *mapper;
+    struct NESfile *rom_file;
     struct PPU *ppu;
     struct APU *apu;
 
@@ -43,5 +37,6 @@ typedef struct BUS {
 void cpu_step();
 uint8_t bus_read (BUS *bus, uint16_t addr);
 void bus_write (BUS *bus, uint16_t addr, uint8_t data);
+void init_banks (BUS *bus);
 //uint8_t cpu_read(uint16_t);
 //void cpu_write(uint16_t,uint8_);
