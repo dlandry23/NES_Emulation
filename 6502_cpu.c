@@ -59,53 +59,7 @@ void init_table() {
 
 }
 
-// .nes file
-void NESfile_init(NESfile *rom_file)
-{
-    //Initialize the file;
-    FILE *f= fopen(rom_file->filename, "rb");
-    if (!f) return -1;
-    /*if (f==NULL)
-	{
-		printf("error: Couldn't open %s\n", rom_file->filename);
-		exit(1);
-	}*/
-    //get file size -- DONT NEED THIS - Know header, know rest of file...
-    /*
-    fseek(f,0L,SEEK_END);
-    int fsize = ftell(f);
-    fseek(f,0L,SEEK_SET);
-    
-    uint8_t *buffer_rom = (uint8_t*)malloc(fsize);//allocate memory (fsize) -> use to read entire rom
-    */
 
-    if (fread(rom_file->header,1,0x10,f) !=0x10) // read the header - check if we got all 16 bytes, if yes, cool
-    {
-        fclose(f);return -1;
-    }
-
-    
-    rom_file->prg_rom_size = rom_file->header[4];// in 16KB units
-    rom_file->chr_rom_size = rom_file->header[5];
-    rom_file->mapper       = (rom_file->header[6] >> 4) | (rom_file->header[7] & 0xF0);
-
-    size_t prg_bytes = rom_file->prg_rom_size*0x4000; // 16KB sections
-    rom_file->prg_rom = malloc(prg_bytes);
-    size_t chr_bytes = rom_file->chr_rom_size*0x2000; // 8KB sections
-    rom_file->chr_rom = malloc(chr_bytes);
-
-    if (fread(rom_file->prg_rom,1,prg_bytes,f) !=prg_bytes) // read the prg_rom
-    {
-        fclose(f);return -1;
-    }
-
-    if (fread(rom_file->chr_rom,1,chr_bytes,f) !=chr_bytes) // read the chr_rom
-    {
-        fclose(f);return -1;
-    }
-
-    fclose(f);
-    return 0;
 
 
 
@@ -117,8 +71,7 @@ void NESfile_init(NESfile *rom_file)
     uint8_t chr_bnk_num = buffer_rom[5];
     memcpy(&state->memory[offset],&buffer_rom[(0x4000*(prg_bnk_num-0x4))+0x10],0x10000);
     //return buffer_rom;*/
-}
-
+//Initialize Banks
 //CPU STEP
 
 void cpu_step(CPU *cpu)
@@ -186,7 +139,7 @@ void bus_write (BUS *bus, uint16_t addr, uint8_t data)
                 break;
             case 0x8001: // bank data
                 // handle bank switching
-                bank_switch(bus->prg_banks,bus->chr_banks,bus->mapper.bank_select,data);
+                bank_switch(bus,data);
                 break;
             case 0xA000: // mirroring
                 break;

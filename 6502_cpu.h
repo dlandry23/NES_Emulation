@@ -4,6 +4,9 @@ struct CPU outline registers -> a couple of placeholder functions for reset, ini
 */
 #include <stdint.h>
 
+#include "NES_mapper.h"
+#include "NES_file.h"
+
 typedef struct CPU {
     uint8_t a, x, y;
     uint8_t s; //Stack Pointer
@@ -16,22 +19,6 @@ typedef struct {
     uint16_t (*addrmode)(CPU*,int);
     uint8_t cycles;
 } Instruction;
-
-typedef struct NESfile {
-    char *filename;
-    uint8_t header[0x10]; //16-byte header
-    uint8_t *prg_rom;
-    uint8_t *chr_rom;
-
-    uint8_t prg_rom_size; // in 16KB units
-    uint8_t chr_rom_size; // in 8KB units
-    uint8_t mapper; // not using for now - just for future if I implement a wrapper outside of MMC3
-} NESfile;
-
-typedef struct MAPPER{
-    uint8_t R[0x08];
-    uint8_t bank_select;
-} MAPPER;
 
 typedef struct BUS {
     uint8_t ram[0x0800];
@@ -51,7 +38,7 @@ typedef struct BUS {
 }BUS;
 
 //NES file initialization
-void NESfile_init(NESfile *rom_file);
+
 
 void cpu_step();
 uint8_t bus_read (BUS *bus, uint16_t addr);
