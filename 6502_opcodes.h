@@ -8,7 +8,7 @@ void command(CPU*, uint16_t) --- uint16_t because program counter is 16bits/2byt
 #include <stdint.h>
 #include "6502_cpu.h"//Access to CPU typedef stuct{}
 
-//Transfer Instructions
+// Transfer Instructions
 void lda(CPU *cpu, uint16_t addr);
 void ldx(CPU *cpu, uint16_t addr);
 void ldy(CPU *cpu, uint16_t addr);
@@ -22,19 +22,23 @@ void txa(CPU *cpu, uint16_t addr);
 void txs(CPU *cpu, uint16_t addr);
 void tya(CPU *cpu, uint16_t addr);
 
-//Stack Instructions
+// Stack Instructions
 void pha(CPU *cpu, BUS *bus);
 void php(CPU *cpu, BUS *bus);
 void pla(CPU *cpu, BUS *bus);
 void plp(CPU *cpu, BUS *bus);
-//Decrements & Increments
+// Decrements & Increments
 void dec(CPU *cpu, BUS *bus, uint16_t addr);
 void dex(CPU *cpu);
 void dey(CPU *cpu);
 void inc(CPU *cpu, BUS *bus, uint16_t addr);
 void inx(CPU *cpu);
 void iny(CPU *cpu);
-//Arithmetic
+// Arithmetic
 void adc(CPU *cpu, uint16_t addr); // Add with Carry
 void sbc(CPU *cpu, uint16_t addr); // Subtract with Borrow
+// Logical Operations
+void and(CPU *cpu, BUS *bus, uint16_t addr);
+void eor(CPU *cpu, BUS *bus, uint16_t addr);
+void ora(CPU *cpu, BUS *bus, uint16_t addr);
 // CONTINUE ON DOWN FOR ALL (organize by function type to make it easier to read)

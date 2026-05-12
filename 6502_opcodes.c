@@ -203,6 +203,26 @@ void sbc(CPU *cpu, uint16_t addr)
     (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
 }
 
+// Logical Operations
+void and(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    cpu->a = cpu->a & data;
+    set_zn(&cpu->p, cpu->a);
+}
+void eor(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    cpu->a = cpu->a ^ data;
+    set_zn(&cpu->p, cpu->a);
+}
+void ora(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    cpu->a = cpu->a | data;
+    set_zn(&cpu->p, cpu->a);
+}
+
 //Bit Test
 
 //Comparisons
