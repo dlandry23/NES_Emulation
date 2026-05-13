@@ -2,6 +2,7 @@
 NES_mapper.h
 */
 #include <stdint.h>
+#include "6502_cpu.h"
 
 typedef struct MAPPER{
     uint8_t R[0x08];

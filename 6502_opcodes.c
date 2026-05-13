@@ -131,6 +131,14 @@ void plp(CPU *cpu,BUS *bus)
 }
 
 // Decrements & Increments
+/*
+DEC - Decrement Memory by 1
+DEX - Decrement X by 1
+DEY - Decrement Y by 1
+INC - Increment Memory by 1
+INX - Increment X by 1
+INY - Increment Y by 1
+*/
 void dec(CPU *cpu, BUS *bus, uint16_t addr)
 {
     uint8_t data = bus_read(bus,addr);
@@ -204,6 +212,11 @@ void sbc(CPU *cpu, uint16_t addr)
 }
 
 // Logical Operations
+/*
+AND - Memory & Accumulator
+EOR - Memory ^ Accumulator (XOR)
+ORA - Memory | Accumulator
+*/
 void and(CPU *cpu, BUS *bus, uint16_t addr)
 {
     uint8_t data = bus_read(bus,addr);
@@ -223,6 +236,127 @@ void ora(CPU *cpu, BUS *bus, uint16_t addr)
     set_zn(&cpu->p, cpu->a);
 }
 
+// Shift & Rotate Instructions
+/*
+ASL - Arithmatic Shift Left
+LSR - Logical Shift Right
+ROL - Rotate Left 1 bit
+ROR - Rotate Right 1 bit
+*/
+void asl(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    (data & 0x80) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting left, capture bit 7 and store in carry flag
+
+    data = data << 1;
+
+    bus_write(bus,addr,data);
+    set_zn(&cpu->p,data);
+}
+void asl_a(CPU *cpu) // SPECIAL CASE, JUST THE ACCUMULATOR
+{
+    (cpu->a & 0x80) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C);
+    cpu->a = cpu->a << 1;
+    set_zn(&cpu->p,cpu->a);
+}
+void lsr(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    (data & 0x01) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting right, capture bit 0 and store in carry flag
+    //CLR_FLAG(cpu->p, FLAG_N); // Shifting right in 0, always clear flag_N
+
+    data = data >> 1;
+
+    bus_write(bus,addr,data);
+    set_zn(&cpu->p,data);
+}
+void lsr_a(CPU *cpu)// SPECIAL CASE, JUST THE ACCUMULATOR
+{
+    (cpu->a & 0x01) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting right, capture bit 0 and store in carry flag
+    //CLR_FLAG(cpu->p, FLAG_N); // shifting in 0, always clear FLAG_N
+    cpu->a = cpu->a >> 1;
+    set_zn(&cpu->p,cpu->a);
+}
+void rol(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    uint8_t old_carry = GET_FLAG(cpu->p,FLAG_C); // Store old carry, then record bit 7 to store in carry flag (0x00 or 0x01)
+    (data & 0x80) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting left, capture bit 7 and store in carry flag
+
+    data = (data << 1) | old_carry;
+
+    bus_write(bus,addr,data);
+    set_zn(&cpu->p,data);
+}
+void rol_a (CPU *cpu)// SPECIAL CASE, JUST THE ACCUMULATOR
+{
+    uint8_t old_carry = GET_FLAG(cpu->p,FLAG_C); // Store old carry, then record bit 7 to store in carry flag (0x00 or 0x01)
+    (cpu->a & 0x80) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting left, capture bit 7 and store in carry flag
+
+    cpu->a = (cpu->a << 1) | old_carry;
+
+    set_zn(&cpu->p,cpu->a);
+}
+void ror(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    uint8_t old_carry = GET_FLAG(cpu->p,FLAG_C); // Store old carry, then record bit 7 to store in carry flag (0x00 or 0x01)
+    (data & 0x01) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting right, capture bit 0 and store in carry flag
+
+    data = (data >> 1) | (old_carry << 7);
+
+    bus_write(bus,addr,data);
+    set_zn(&cpu->p,data);
+}
+void ror_a(CPU *cpu)// SPECIAL CASE, JUST THE ACCUMULATOR
+{
+    uint8_t old_carry = GET_FLAG(cpu->p,FLAG_C); // Store old carry, then record bit 7 to store in carry flag (0x00 or 0x01)
+    (cpu->a & 0x01) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting right, capture bit 0 and store in carry flag
+
+    cpu->a = (cpu->a >> 1) | (old_carry << 7);
+
+    set_zn(&cpu->p,cpu->a);
+}
+
+// Flag Instructions
+/*
+CLC - Clear Carry
+CLD - Clear Decimal
+CLI - Clear Interrupt Disable
+CLV - Clear Overflow
+SEC - Set Carry
+SED - Set Decimal
+SEI - Set Interrupt Disable
+*/
+
+void clc(CPU *cpu)
+{
+    CLR_FLAG(cpu->p,FLAG_C);
+}
+void cld(CPU *cpu)
+{
+    CLR_FLAG(cpu->p,FLAG_D);
+}
+void cli(CPU *cpu)
+{
+    CLR_FLAG(cpu->p,FLAG_I);
+}
+void clv(CPU *cpu)
+{
+    CLR_FLAG(cpu->p,FLAG_V);
+}
+void sec(CPU *cpu)
+{
+    SET_FLAG(cpu->p,FLAG_C);
+}
+void sed(CPU *cpu)
+{
+    SET_FLAG(cpu->p,FLAG_D);
+}
+void sei(CPU *cpu)
+{
+    SET_FLAG(cpu->p,FLAG_I);
+}
 //Bit Test
 
 //Comparisons

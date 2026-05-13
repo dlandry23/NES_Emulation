@@ -41,4 +41,21 @@ void sbc(CPU *cpu, uint16_t addr); // Subtract with Borrow
 void and(CPU *cpu, BUS *bus, uint16_t addr);
 void eor(CPU *cpu, BUS *bus, uint16_t addr);
 void ora(CPU *cpu, BUS *bus, uint16_t addr);
+// Shift & Rotate Instructions
+void asl(CPU *cpu, BUS *bus, uint16_t addr);
+void asl_a(CPU *cpu); // SPECIAL CASE, JUST THE ACCUMULATOR
+void lsr(CPU *cpu, BUS *bus, uint16_t addr);
+void lsr_a(CPU *cpu);// SPECIAL CASE, JUST THE ACCUMULATOR
+void rol(CPU *cpu, BUS *bus, uint16_t addr);
+void rol_a (CPU *cpu);// SPECIAL CASE, JUST THE ACCUMULATOR
+void ror(CPU *cpu, BUS *bus, uint16_t addr);
+void ror_a(CPU *cpu);// SPECIAL CASE, JUST THE ACCUMULATOR
+// Flag Instructions
+void clc(CPU *cpu);
+void cld(CPU *cpu);
+void cli(CPU *cpu);
+void clv(CPU *cpu);
+void sec(CPU *cpu);
+void sed(CPU *cpu);
+void sei(CPU *cpu);
 // CONTINUE ON DOWN FOR ALL (organize by function type to make it easier to read)
