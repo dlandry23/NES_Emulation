@@ -9,18 +9,18 @@ void command(CPU*, uint16_t) --- uint16_t because program counter is 16bits/2byt
 #include "6502_cpu.h"//Access to CPU typedef stuct{}
 
 // Transfer Instructions
-void lda(CPU *cpu, uint16_t addr);
-void ldx(CPU *cpu, uint16_t addr);
-void ldy(CPU *cpu, uint16_t addr);
-void sta(CPU *cpu, uint16_t addr);
-void stx(CPU *cpu, uint16_t addr);
-void sty(CPU *cpu, uint16_t addr);
-void tax(CPU *cpu, uint16_t addr);
-void tay(CPU *cpu, uint16_t addr);
-void tsx(CPU *cpu, uint16_t addr);
-void txa(CPU *cpu, uint16_t addr);
-void txs(CPU *cpu, uint16_t addr);
-void tya(CPU *cpu, uint16_t addr);
+void lda(CPU *cpu, BUS *bus, uint16_t addr);
+void ldx(CPU *cpu, BUS *bus, uint16_t addr);
+void ldy(CPU *cpu, BUS *bus, uint16_t addr);
+void sta(CPU *cpu, BUS *bus, uint16_t addr);
+void stx(CPU *cpu, BUS *bus, uint16_t addr);
+void sty(CPU *cpu, BUS *bus, uint16_t addr);
+void tax(CPU *cpu);
+void tay(CPU *cpu);
+void tsx(CPU *cpu);
+void txa(CPU *cpu);
+void txs(CPU *cpu);
+void tya(CPU *cpu);
 
 // Stack Instructions
 void pha(CPU *cpu, BUS *bus);
@@ -35,8 +35,8 @@ void inc(CPU *cpu, BUS *bus, uint16_t addr);
 void inx(CPU *cpu);
 void iny(CPU *cpu);
 // Arithmetic
-void adc(CPU *cpu, uint16_t addr); // Add with Carry
-void sbc(CPU *cpu, uint16_t addr); // Subtract with Borrow
+void adc(CPU *cpu, BUS *bus, uint16_t addr); // Add with Carry
+void sbc(CPU *cpu, BUS *bus, uint16_t addr); // Subtract with Borrow
 // Logical Operations
 void and(CPU *cpu, BUS *bus, uint16_t addr);
 void eor(CPU *cpu, BUS *bus, uint16_t addr);
@@ -58,4 +58,19 @@ void clv(CPU *cpu);
 void sec(CPU *cpu);
 void sed(CPU *cpu);
 void sei(CPU *cpu);
+// Comparisons
+void cmp(CPU *cpu, BUS *bus, uint16_t addr);
+void cpx(CPU *cpu, BUS *bus, uint16_t addr);
+void cpy(CPU *cpu, BUS *bus, uint16_t addr);
+// Bit Test
+void bit(CPU *cpu, BUS *bus, uint16_t addr);
+//Conditional Branch Instructions
+void bcc(CPU *cpu, BUS *bus, uint16_t addr);
+void bcs(CPU *cpu, BUS *bus, uint16_t addr);
+void beq(CPU *cpu, BUS *bus, uint16_t addr);
+void bmi(CPU *cpu, BUS *bus, uint16_t addr);
+void bne(CPU *cpu, BUS *bus, uint16_t addr);
+void bpl(CPU *cpu, BUS *bus, uint16_t addr);
+void bvc(CPU *cpu, BUS *bus, uint16_t addr);
+void bvs(CPU *cpu, BUS *bus, uint16_t addr);
 // CONTINUE ON DOWN FOR ALL (organize by function type to make it easier to read)

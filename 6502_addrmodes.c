@@ -28,28 +28,28 @@ uint16_t addr_imm(CPU *cpu,int *page_cross)     //Immediate
 {
     return cpu->pc++;
 }
-uint16_t addr_zp(CPU *cpu,int *page_cross)      // Zeropage
+uint16_t addr_zp(CPU *cpu, BUS *bus, int *page_cross)      // Zeropage
 {
-    return cpu_read(cpu->pc++); // no hi byte, so just return this as uint16_t - will make highbyte zero
+    return (uint16_t)bus_read(bus,cpu->pc++); // no hi byte, so just return this as uint16_t - will make highbyte zero
 }
-uint16_t addr_zpx(CPU *cpu,int *page_cross)     // Zeropage, X
+uint16_t addr_zpx(CPU *cpu, BUS *bus, int *page_cross)     // Zeropage, X
 {
-    return (cpu_read(cpu->pc++) + cpu->x) & 0xFF; //page wrapping in zero page -> no cycle penalty
+    return (uint16_t)((bus_read(bus, cpu->pc++) + cpu->x) & 0xFF); //page wrapping in zero page -> no cycle penalty
 }
-uint16_t addr_zpy(CPU *cpu,int *page_cross)     // Zeropage, Y
+uint16_t addr_zpy(CPU *cpu, BUS *bus, int *page_cross)     // Zeropage, Y
 {
-    return (cpu_read(cpu->pc++) + cpu->y) & 0xFF; //page wrapping in zero page -> no cycle penalty
+    return (uint16_t)((bus_read(bus, cpu->pc++) + cpu->y) & 0xFF); //page wrapping in zero page -> no cycle penalty
 }
-uint16_t addr_abs(CPU *cpu,int *page_cross)     // Absolute
+uint16_t addr_abs(CPU *cpu, BUS *bus, int *page_cross)     // Absolute
 {
-    uint16_t lo = cpu_read(cpu->pc++);
-    uint16_t hi = cpu_read(cpu->pc++);
+    uint16_t lo = (uint16_t)bus_read(bus, cpu->pc++);
+    uint16_t hi = (uint16_t)bus_read(bus, cpu->pc++);
     return (hi << 8) | lo;  
 }
-uint16_t addr_absx(CPU *cpu,int *page_cross)    // Absolute,X
+uint16_t addr_absx(CPU *cpu, BUS *bus, int *page_cross)    // Absolute,X
 {
-    uint16_t lo = cpu_read(cpu->pc++);
-    uint16_t hi = cpu_read(cpu->pc++);
+    uint16_t lo = (uint16_t)bus_read(bus, cpu->pc++);
+    uint16_t hi = (uint16_t)bus_read(bus, cpu->pc++);
 
     uint16_t base = (hi << 8) | lo;
     uint16_t addr = base + cpu->x;
@@ -58,10 +58,10 @@ uint16_t addr_absx(CPU *cpu,int *page_cross)    // Absolute,X
 
     return addr;
 }
-uint16_t addr_absy(CPU *cpu,int *page_cross)    // Absolute,Y
+uint16_t addr_absy(CPU *cpu, BUS *bus, int *page_cross)    // Absolute,Y
 {
-    uint16_t lo = cpu_read(cpu->pc++);
-    uint16_t hi = cpu_read(cpu->pc++);
+    uint16_t lo = (uint16_t)bus_read(bus, cpu->pc++);
+    uint16_t hi = (uint16_t)bus_read(bus, cpu->pc++);
 
     uint16_t base = (hi << 8) | lo;
     uint16_t addr = base + cpu->y;
@@ -69,23 +69,28 @@ uint16_t addr_absy(CPU *cpu,int *page_cross)    // Absolute,Y
     *page_cross = ((base & 0xFF00) != (addr & 0xFF00));
     return addr;
 }
-uint16_t addr_indirx(CPU *cpu,int *page_cross)  // Indirect, X
+uint16_t addr_indirx(CPU *cpu, BUS *bus, int *page_cross)  // Indirect, X
 {
-    uint16_t zp_addr = (cpu_read(cpu->pc++) + cpu->x) & 0xFF;
-    uint16_t lo = cpu_read(zp_addr);
-    uint16_t hi = cpu_read(zp_addr++);
+    uint16_t zp_addr = (uint16_t)(bus_read(bus, cpu->pc++) + cpu->x);
+    uint16_t lo = (uint16_t)bus_read(bus, zp_addr);
+    uint16_t hi = (uint16_t)bus_read(bus, zp_addr + 1);
     return (hi << 8) | lo;  
 }
-uint16_t addr_indiry(CPU *cpu,int *page_cross)  // Indirect, Y
+uint16_t addr_indiry(CPU *cpu, BUS *bus, int *page_cross)  // Indirect, Y
 {
-    uint16_t zp_addr = cpu_read(cpu->pc++);
+    uint16_t zp_addr = (uint16_t)bus_read(bus, cpu->pc++);
 
-    uint16_t lo = cpu_read(zp_addr);
-    uint16_t hi = cpu_read(zp_addr++);
+    uint16_t lo = (uint16_t)bus_read(bus, zp_addr);
+    uint16_t hi = (uint16_t)bus_read(bus, zp_addr + 1);
 
     uint16_t base = (hi << 8) | lo;  
     uint16_t addr = base + cpu->y;
 
     *page_cross = ((base & 0xFF00) != (addr & 0xFF00));
     return addr;
+}
+uint16_t addr_rel(CPU *cpu, BUS *bus, int *page_cross)
+{
+    int8_t offset = (int8_t)bus_read(bus,cpu->pc++);
+    return (uint16_t)(cpu->pc + offset);
 }

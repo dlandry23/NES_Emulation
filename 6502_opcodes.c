@@ -44,59 +44,59 @@ TXA - Transfer X to Accumulator
 TXS - Transfer X to Stack Pointer (S)
 TYA - Transfer Y to Accumulator
 */
-void lda(CPU *cpu, uint16_t addr)
+void lda(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    cpu->a = cpu_read(addr);
+    cpu->a = bus_read(bus,addr);
     set_zn(&cpu->p, cpu->a);
 }
-void ldx(CPU *cpu, uint16_t addr)
+void ldx(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    cpu->x = cpu_read(addr);
+    cpu->x = bus_read(bus,addr);
     set_zn(&cpu->p, cpu->x);
 }
-void ldy(CPU *cpu, uint16_t addr)
+void ldy(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    cpu->y = cpu_read(addr);
+    cpu->y = bus_read(bus,addr);
     set_zn(&cpu->p, cpu->y);
 }
-void sta(CPU *cpu, uint16_t addr)
+void sta(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    cpu_write(addr,cpu->a);
+    bus_write(bus,addr,cpu->a);
 }
-void stx(CPU *cpu, uint16_t addr)
+void stx(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    cpu_write(addr,cpu->x);
+    bus_write(bus,addr,cpu->x);
 }
-void sty(CPU *cpu, uint16_t addr)
+void sty(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    cpu_write(addr,cpu->y);
+    bus_write(bus,addr,cpu->y);
 }
-void tax(CPU *cpu, uint16_t addr)
+void tax(CPU *cpu)
 {
     cpu->x = cpu->a;
     set_zn(&cpu->p, cpu->x);
 }
-void tay(CPU *cpu, uint16_t addr)
+void tay(CPU *cpu)
 {
     cpu->y = cpu->a;
     set_zn(&cpu->p, cpu->y);
 }
-void tsx(CPU *cpu, uint16_t addr)
+void tsx(CPU *cpu)
 {
     cpu->x = cpu->s;
     set_zn(&cpu->p, cpu->x);
 }
-void txa(CPU *cpu, uint16_t addr)
+void txa(CPU *cpu)
 {
     cpu->a = cpu->x;
     set_zn(&cpu->p, cpu->a);
 }
-void txs(CPU *cpu, uint16_t addr)
+void txs(CPU *cpu)
 {
     cpu->s = cpu->x;
     set_zn(&cpu->p, cpu->s);
 }
-void tya(CPU *cpu, uint16_t addr)
+void tya(CPU *cpu)
 {
     cpu->a = cpu->y;
     set_zn(&cpu->p, cpu->a);
@@ -179,10 +179,10 @@ void iny(CPU *cpu)
 ADC - Add Memory to Accumulator with Carry
 SBC - Subtract memory from Accumulator with Borrow
 */
-void adc(CPU *cpu, uint16_t addr) 
+void adc(CPU *cpu, BUS *bus, uint16_t addr) 
 {
     uint8_t carry = GET_FLAG(cpu->p,FLAG_C);
-    uint8_t value = cpu_read(addr);
+    uint8_t value = bus_read(bus,addr);
     uint16_t sum = cpu->a + value + carry;
 
     //Overflow (V)
@@ -195,11 +195,11 @@ void adc(CPU *cpu, uint16_t addr)
     (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
 
 }
-void sbc(CPU *cpu, uint16_t addr)
+void sbc(CPU *cpu, BUS *bus, uint16_t addr)
 {
     uint8_t carry = GET_FLAG(cpu->p,FLAG_C);
-    uint8_t value = cpu_read(addr);
-    uint16_t sum = cpu->a + ~(value) + carry;
+    uint8_t value = bus_read(bus, addr);
+    uint16_t sum = (uint16_t)cpu->a + (uint16_t)(~value) + carry;
 
     //Overflow (V)
     ((~(cpu->a ^ sum) & (~value ^ sum) & 0x80) != 0) ? SET_FLAG(cpu->p,FLAG_V) : CLR_FLAG(cpu->p, FLAG_V);
@@ -328,7 +328,6 @@ SEC - Set Carry
 SED - Set Decimal
 SEI - Set Interrupt Disable
 */
-
 void clc(CPU *cpu)
 {
     CLR_FLAG(cpu->p,FLAG_C);
@@ -357,12 +356,92 @@ void sei(CPU *cpu)
 {
     SET_FLAG(cpu->p,FLAG_I);
 }
-//Bit Test
 
-//Comparisons
+// Comparisons
+/*
+CMP - Compare Memory with Accumulator
+CPX - Compare Memory with X
+CPY - Compare Memory with Y
+*/
+void cmp(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    uint16_t sum = (uint16_t)cpu->a + (uint16_t)(~data) + 1;
+    set_zn(cpu->p, sum & 0xFF);
+    (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
+}
+void cpx(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    uint16_t sum = (uint16_t)cpu->x + (uint16_t)(~data) + 1;
+    set_zn(cpu->p, sum & 0xFF);
+    (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
+}
+void cpy(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    uint16_t sum = (uint16_t)cpu->y + (uint16_t)(~data) + 1;
+    set_zn(cpu->p, sum & 0xFF);
+    (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
+}
 
-//Conditional Branch Instructions
+// Bit Test
+/*
+BIT - A & M - use result to set FLAG_Z, M7 -> FLAG_N, M6 -> FLAG_V
+*/
+void bit(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t data = bus_read(bus,addr);
+    uint8_t result = cpu->a & data;
+    (result==0x00) ? SET_FLAG(cpu->p,FLAG_Z) : CLR_FLAG(cpu->p, FLAG_Z);
+    (data & 0x80) ? SET_FLAG(cpu->p,FLAG_N) : CLR_FLAG(cpu->p, FLAG_N);
+    (data & 0x40) ? SET_FLAG(cpu->p,FLAG_V) : CLR_FLAG(cpu->p, FLAG_V);
+}
 
+// Conditional Branch Instructions
+/*
+BCC - Branch on Carry Clear
+BCS - on Carry Set
+BEQ - on Equal (Zero Flag Set)
+BMI - on Minus (Negative Flag Set)
+BNE - on not equal (Zero Flag Clear)
+BPL - on Plus (Negative Flag Clear)
+BVC - on Overflow Clear
+BVS - on Overflow Set
+// offset calculations handled in addr_rel
+*/
+void bcc(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    if (!GET_FLAG(cpu->p,FLAG_C)) cpu->pc = addr;
+}
+void bcs(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    if (GET_FLAG(cpu->p,FLAG_C)) cpu->pc = addr;
+}
+void beq(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    if (GET_FLAG(cpu->p,FLAG_Z)) cpu->pc = addr;
+}
+void bmi(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    if (GET_FLAG(cpu->p,FLAG_N)) cpu->pc = addr;
+}
+void bne(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    if (!GET_FLAG(cpu->p,FLAG_Z)) cpu->pc = addr;
+}
+void bpl(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    if (!GET_FLAG(cpu->p,FLAG_N)) cpu->pc = addr;
+}
+void bvc(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    if (!GET_FLAG(cpu->p,FLAG_V)) cpu->pc = addr;
+}
+void bvs(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    if (GET_FLAG(cpu->p,FLAG_V)) cpu->pc = addr;
+}
 // Decrements & Increments
 
 //
