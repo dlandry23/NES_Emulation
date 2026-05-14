@@ -15,25 +15,24 @@ void ldy(CPU *cpu, BUS *bus, uint16_t addr);
 void sta(CPU *cpu, BUS *bus, uint16_t addr);
 void stx(CPU *cpu, BUS *bus, uint16_t addr);
 void sty(CPU *cpu, BUS *bus, uint16_t addr);
-void tax(CPU *cpu);
-void tay(CPU *cpu);
-void tsx(CPU *cpu);
-void txa(CPU *cpu);
-void txs(CPU *cpu);
-void tya(CPU *cpu);
-
+void tax(CPU *cpu, BUS *bus, uint16_t addr);
+void tay(CPU *cpu, BUS *bus, uint16_t addr);
+void tsx(CPU *cpu, BUS *bus, uint16_t addr);
+void txa(CPU *cpu, BUS *bus, uint16_t addr);
+void txs(CPU *cpu, BUS *bus, uint16_t addr);
+void tya(CPU *cpu, BUS *bus, uint16_t addr);
 // Stack Instructions
-void pha(CPU *cpu, BUS *bus);
-void php(CPU *cpu, BUS *bus);
-void pla(CPU *cpu, BUS *bus);
-void plp(CPU *cpu, BUS *bus);
+void pha(CPU *cpu, BUS *bus, uint16_t addr);
+void php(CPU *cpu, BUS *bus, uint16_t addr);
+void pla(CPU *cpu, BUS *bus, uint16_t addr);
+void plp(CPU *cpu, BUS *bus, uint16_t addr);
 // Decrements & Increments
 void dec(CPU *cpu, BUS *bus, uint16_t addr);
-void dex(CPU *cpu);
-void dey(CPU *cpu);
+void dex(CPU *cpu, BUS *bus, uint16_t addr);
+void dey(CPU *cpu, BUS *bus, uint16_t addr);
 void inc(CPU *cpu, BUS *bus, uint16_t addr);
-void inx(CPU *cpu);
-void iny(CPU *cpu);
+void inx(CPU *cpu, BUS *bus, uint16_t addr);
+void iny(CPU *cpu, BUS *bus, uint16_t addr);
 // Arithmetic
 void adc(CPU *cpu, BUS *bus, uint16_t addr); // Add with Carry
 void sbc(CPU *cpu, BUS *bus, uint16_t addr); // Subtract with Borrow
@@ -43,21 +42,21 @@ void eor(CPU *cpu, BUS *bus, uint16_t addr);
 void ora(CPU *cpu, BUS *bus, uint16_t addr);
 // Shift & Rotate Instructions
 void asl(CPU *cpu, BUS *bus, uint16_t addr);
-void asl_a(CPU *cpu); // SPECIAL CASE, JUST THE ACCUMULATOR
+void asl_a(CPU *cpu, BUS *bus, uint16_t addr); // SPECIAL CASE, JUST THE ACCUMULATOR
 void lsr(CPU *cpu, BUS *bus, uint16_t addr);
-void lsr_a(CPU *cpu);// SPECIAL CASE, JUST THE ACCUMULATOR
+void lsr_a(CPU *cpu, BUS *bus, uint16_t addr);// SPECIAL CASE, JUST THE ACCUMULATOR
 void rol(CPU *cpu, BUS *bus, uint16_t addr);
-void rol_a (CPU *cpu);// SPECIAL CASE, JUST THE ACCUMULATOR
+void rol_a (CPU *cpu, BUS *bus, uint16_t addr);// SPECIAL CASE, JUST THE ACCUMULATOR
 void ror(CPU *cpu, BUS *bus, uint16_t addr);
-void ror_a(CPU *cpu);// SPECIAL CASE, JUST THE ACCUMULATOR
+void ror_a(CPU *cpu, BUS *bus, uint16_t addr);// SPECIAL CASE, JUST THE ACCUMULATOR
 // Flag Instructions
-void clc(CPU *cpu);
-void cld(CPU *cpu);
-void cli(CPU *cpu);
-void clv(CPU *cpu);
-void sec(CPU *cpu);
-void sed(CPU *cpu);
-void sei(CPU *cpu);
+void clc(CPU *cpu, BUS *bus, uint16_t addr);
+void cld(CPU *cpu, BUS *bus, uint16_t addr);
+void cli(CPU *cpu, BUS *bus, uint16_t addr);
+void clv(CPU *cpu, BUS *bus, uint16_t addr);
+void sec(CPU *cpu, BUS *bus, uint16_t addr);
+void sed(CPU *cpu, BUS *bus, uint16_t addr);
+void sei(CPU *cpu, BUS *bus, uint16_t addr);
 // Comparisons
 void cmp(CPU *cpu, BUS *bus, uint16_t addr);
 void cpx(CPU *cpu, BUS *bus, uint16_t addr);
@@ -73,4 +72,13 @@ void bne(CPU *cpu, BUS *bus, uint16_t addr);
 void bpl(CPU *cpu, BUS *bus, uint16_t addr);
 void bvc(CPU *cpu, BUS *bus, uint16_t addr);
 void bvs(CPU *cpu, BUS *bus, uint16_t addr);
+// Jumps and Subroutines
+void jmp(CPU *cpu, BUS *bus, uint16_t addr);
+void jsr(CPU *cpu, BUS *bus, uint16_t addr);
+void rts(CPU *cpu, BUS *bus, uint16_t addr);
+// Interrupts
+void brk(CPU *cpu, BUS *bus, uint16_t addr);
+void rti(CPU *cpu, BUS *bus, uint16_t addr);
+// No Operation
+void nop(CPU *cpu, BUS *bus, uint16_t addr);
 // CONTINUE ON DOWN FOR ALL (organize by function type to make it easier to read)

@@ -79,18 +79,16 @@ void init_banks (BUS *bus)
 }
 //CPU STEP
 
-void cpu_step(CPU *cpu)
+void cpu_step(CPU *cpu, BUS *bus)
 {
     int page_crossed =0;
+    uint8_t opcode = bus_read(bus,cpu->pc++);
     Instruction inst = table[opcode];
-    uint16_t addr = inst.addrmode(cpu, &page_crossed);
+    uint16_t addr = inst.addrmode(cpu, bus, &page_crossed);
+    cpu->cycles      = inst.cycles;
+    cpu->cycles     += page_crossed;
+    inst.operate(cpu,bus,addr); // tick up the cycles if need
 
-    inst.operate(cpu, addr);
-// THIS IS WRONG NOW?
-    int cycles += inst.cycles;
-    if (page_crossed && inst.add_cycle_on_page_cross) {
-    cycles++;
-}
 }
 
 // BUS READ / BUS WRITE

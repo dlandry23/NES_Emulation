@@ -71,32 +71,31 @@ void sty(CPU *cpu, BUS *bus, uint16_t addr)
 {
     bus_write(bus,addr,cpu->y);
 }
-void tax(CPU *cpu)
+void tax(CPU *cpu, BUS *bus, uint16_t addr)
 {
     cpu->x = cpu->a;
     set_zn(&cpu->p, cpu->x);
 }
-void tay(CPU *cpu)
+void tay(CPU *cpu, BUS *bus, uint16_t addr)
 {
     cpu->y = cpu->a;
     set_zn(&cpu->p, cpu->y);
 }
-void tsx(CPU *cpu)
+void tsx(CPU *cpu, BUS *bus, uint16_t addr)
 {
     cpu->x = cpu->s;
     set_zn(&cpu->p, cpu->x);
 }
-void txa(CPU *cpu)
+void txa(CPU *cpu, BUS *bus, uint16_t addr)
 {
     cpu->a = cpu->x;
     set_zn(&cpu->p, cpu->a);
 }
-void txs(CPU *cpu)
+void txs(CPU *cpu, BUS *bus, uint16_t addr)
 {
     cpu->s = cpu->x;
-    set_zn(&cpu->p, cpu->s);
 }
-void tya(CPU *cpu)
+void tya(CPU *cpu, BUS *bus, uint16_t addr)
 {
     cpu->a = cpu->y;
     set_zn(&cpu->p, cpu->a);
@@ -109,25 +108,25 @@ PHP - Push Processor Status Register tp stack (with break flag set)
 PLA - Pull Accumulator off stack
 PLP - Pull processor status register off stack
 */
-void pha(CPU *cpu, BUS *bus)
+void pha(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    bus_write(bus,(0x0100|cpu->s),cpu->a); //(0x0100|cpu->s) -> Stack at location 0x0100-0x01FF - 256 bits set at page 1
+    bus_write(bus,(0x0100 | cpu->s--),cpu->a); //(0x0100|cpu->s) -> Stack at location 0x0100-0x01FF - 256 bits set at page 1
+    //cpu->s--;
+}
+void php(CPU *cpu,BUS *bus, uint16_t addr)
+{
+    SET_FLAG(cpu->p, FLAG_B);
+    bus_write(bus,(0x0100 | cpu->s),cpu->p);
     cpu->s--;
 }
-void php(CPU *cpu,BUS *bus)
+void pla(CPU *cpu,BUS *bus, uint16_t addr)
 {
-    bus_write(bus,(0x0100|cpu->s),cpu->a);
-    cpu->s--;
+    cpu->a = bus_read(bus, 0x0100 | ++cpu->s);
+    set_zn(&cpu->p, cpu->a);
 }
-void pla(CPU *cpu,BUS *bus)
+void plp(CPU *cpu,BUS *bus, uint16_t addr)
 {
-    cpu->a = bus_read(bus, cpu->s);
-    cpu->s++;
-}
-void plp(CPU *cpu,BUS *bus)
-{
-    cpu->p = bus_read(bus, cpu->s);
-    cpu->s++;
+    cpu->p = bus_read(bus, 0x0100 | ++cpu->s);
 }
 
 // Decrements & Increments
@@ -146,12 +145,12 @@ void dec(CPU *cpu, BUS *bus, uint16_t addr)
     bus_write(bus,addr, data);
     set_zn(&cpu->p, data);
 }
-void dex(CPU *cpu)
+void dex(CPU *cpu, BUS *bus, uint16_t addr)
 {
     cpu->x--;
     set_zn(&cpu->p, cpu->x);
 }
-void dey(CPU *cpu)
+void dey(CPU *cpu, BUS *bus, uint16_t addr)
 {
     cpu->y--;
     set_zn(&cpu->p, cpu->y);
@@ -163,12 +162,12 @@ void inc(CPU *cpu, BUS *bus, uint16_t addr)
     bus_write(bus,addr,data);
     set_zn(&cpu->p,data);
 }
-void inx(CPU *cpu)
+void inx(CPU *cpu, BUS *bus, uint16_t addr)
 {
     cpu->x++;
     set_zn(&cpu->p, cpu->x);
 }
-void iny(CPU *cpu)
+void iny(CPU *cpu, BUS *bus, uint16_t addr)
 {
     cpu->y++;
     set_zn(&cpu->p, cpu->y);
@@ -253,7 +252,7 @@ void asl(CPU *cpu, BUS *bus, uint16_t addr)
     bus_write(bus,addr,data);
     set_zn(&cpu->p,data);
 }
-void asl_a(CPU *cpu) // SPECIAL CASE, JUST THE ACCUMULATOR
+void asl_a(CPU *cpu, BUS *bus, uint16_t addr) // SPECIAL CASE, JUST THE ACCUMULATOR
 {
     (cpu->a & 0x80) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C);
     cpu->a = cpu->a << 1;
@@ -270,7 +269,7 @@ void lsr(CPU *cpu, BUS *bus, uint16_t addr)
     bus_write(bus,addr,data);
     set_zn(&cpu->p,data);
 }
-void lsr_a(CPU *cpu)// SPECIAL CASE, JUST THE ACCUMULATOR
+void lsr_a(CPU *cpu, BUS *bus, uint16_t addr)// SPECIAL CASE, JUST THE ACCUMULATOR
 {
     (cpu->a & 0x01) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting right, capture bit 0 and store in carry flag
     //CLR_FLAG(cpu->p, FLAG_N); // shifting in 0, always clear FLAG_N
@@ -288,7 +287,7 @@ void rol(CPU *cpu, BUS *bus, uint16_t addr)
     bus_write(bus,addr,data);
     set_zn(&cpu->p,data);
 }
-void rol_a (CPU *cpu)// SPECIAL CASE, JUST THE ACCUMULATOR
+void rol_a (CPU *cpu, BUS *bus, uint16_t addr)// SPECIAL CASE, JUST THE ACCUMULATOR
 {
     uint8_t old_carry = GET_FLAG(cpu->p,FLAG_C); // Store old carry, then record bit 7 to store in carry flag (0x00 or 0x01)
     (cpu->a & 0x80) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting left, capture bit 7 and store in carry flag
@@ -308,7 +307,7 @@ void ror(CPU *cpu, BUS *bus, uint16_t addr)
     bus_write(bus,addr,data);
     set_zn(&cpu->p,data);
 }
-void ror_a(CPU *cpu)// SPECIAL CASE, JUST THE ACCUMULATOR
+void ror_a(CPU *cpu, BUS *bus, uint16_t addr)// SPECIAL CASE, JUST THE ACCUMULATOR
 {
     uint8_t old_carry = GET_FLAG(cpu->p,FLAG_C); // Store old carry, then record bit 7 to store in carry flag (0x00 or 0x01)
     (cpu->a & 0x01) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting right, capture bit 0 and store in carry flag
@@ -328,31 +327,31 @@ SEC - Set Carry
 SED - Set Decimal
 SEI - Set Interrupt Disable
 */
-void clc(CPU *cpu)
+void clc(CPU *cpu, BUS *bus, uint16_t addr)
 {
     CLR_FLAG(cpu->p,FLAG_C);
 }
-void cld(CPU *cpu)
+void cld(CPU *cpu, BUS *bus, uint16_t addr)
 {
     CLR_FLAG(cpu->p,FLAG_D);
 }
-void cli(CPU *cpu)
+void cli(CPU *cpu, BUS *bus, uint16_t addr)
 {
     CLR_FLAG(cpu->p,FLAG_I);
 }
-void clv(CPU *cpu)
+void clv(CPU *cpu, BUS *bus, uint16_t addr)
 {
     CLR_FLAG(cpu->p,FLAG_V);
 }
-void sec(CPU *cpu)
+void sec(CPU *cpu, BUS *bus, uint16_t addr)
 {
     SET_FLAG(cpu->p,FLAG_C);
 }
-void sed(CPU *cpu)
+void sed(CPU *cpu, BUS *bus, uint16_t addr)
 {
     SET_FLAG(cpu->p,FLAG_D);
 }
-void sei(CPU *cpu)
+void sei(CPU *cpu, BUS *bus, uint16_t addr)
 {
     SET_FLAG(cpu->p,FLAG_I);
 }
@@ -367,21 +366,21 @@ void cmp(CPU *cpu, BUS *bus, uint16_t addr)
 {
     uint8_t data = bus_read(bus,addr);
     uint16_t sum = (uint16_t)cpu->a + (uint16_t)(~data) + 1;
-    set_zn(cpu->p, sum & 0xFF);
+    set_zn(&cpu->p, sum & 0xFF);
     (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
 }
 void cpx(CPU *cpu, BUS *bus, uint16_t addr)
 {
     uint8_t data = bus_read(bus,addr);
     uint16_t sum = (uint16_t)cpu->x + (uint16_t)(~data) + 1;
-    set_zn(cpu->p, sum & 0xFF);
+    set_zn(&cpu->p, sum & 0xFF);
     (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
 }
 void cpy(CPU *cpu, BUS *bus, uint16_t addr)
 {
     uint8_t data = bus_read(bus,addr);
     uint16_t sum = (uint16_t)cpu->y + (uint16_t)(~data) + 1;
-    set_zn(cpu->p, sum & 0xFF);
+    set_zn(&cpu->p, sum & 0xFF);
     (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
 }
 
@@ -412,36 +411,149 @@ BVS - on Overflow Set
 */
 void bcc(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    if (!GET_FLAG(cpu->p,FLAG_C)) cpu->pc = addr;
+    
+    if (!GET_FLAG(cpu->p,FLAG_C)) 
+    {
+        uint16_t base = cpu->pc;
+        cpu->pc = addr;
+        cpu->cycles++;
+        if ((base & 0xFF00) != (addr & 0xFF00)) cpu->cycles++;
+    }
+    
+    
 }
 void bcs(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    if (GET_FLAG(cpu->p,FLAG_C)) cpu->pc = addr;
+    if (GET_FLAG(cpu->p,FLAG_C))
+    {
+        uint16_t base = cpu->pc;
+        cpu->pc = addr;
+        cpu->cycles++;
+        if ((base & 0xFF00) != (addr & 0xFF00)) cpu->cycles++;
+    }
 }
 void beq(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    if (GET_FLAG(cpu->p,FLAG_Z)) cpu->pc = addr;
+    if (GET_FLAG(cpu->p,FLAG_Z))
+    {
+        uint16_t base = cpu->pc;
+        cpu->pc = addr;
+        cpu->cycles++;
+        if ((base & 0xFF00) != (addr & 0xFF00)) cpu->cycles++;
+    }
 }
 void bmi(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    if (GET_FLAG(cpu->p,FLAG_N)) cpu->pc = addr;
+    if (GET_FLAG(cpu->p,FLAG_N))
+    {
+        uint16_t base = cpu->pc;
+        cpu->pc = addr;
+        cpu->cycles++;
+        if ((base & 0xFF00) != (addr & 0xFF00)) cpu->cycles++;
+    }
 }
 void bne(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    if (!GET_FLAG(cpu->p,FLAG_Z)) cpu->pc = addr;
+    if (!GET_FLAG(cpu->p,FLAG_Z))
+    {
+        uint16_t base = cpu->pc;
+        cpu->pc = addr;
+        cpu->cycles++;
+        if ((base & 0xFF00) != (addr & 0xFF00)) cpu->cycles++;
+    }
 }
 void bpl(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    if (!GET_FLAG(cpu->p,FLAG_N)) cpu->pc = addr;
+    if (!GET_FLAG(cpu->p,FLAG_N))
+    {
+        uint16_t base = cpu->pc;
+        cpu->pc = addr;
+        cpu->cycles++;
+        if ((base & 0xFF00) != (addr & 0xFF00)) cpu->cycles++;
+    }
 }
 void bvc(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    if (!GET_FLAG(cpu->p,FLAG_V)) cpu->pc = addr;
+    if (!GET_FLAG(cpu->p,FLAG_V))
+    {
+        uint16_t base = cpu->pc;
+        cpu->pc = addr;
+        cpu->cycles++;
+        if ((base & 0xFF00) != (addr & 0xFF00)) cpu->cycles++;
+    }
 }
 void bvs(CPU *cpu, BUS *bus, uint16_t addr)
 {
-    if (GET_FLAG(cpu->p,FLAG_V)) cpu->pc = addr;
+    if (GET_FLAG(cpu->p,FLAG_V))
+    {
+        uint16_t base = cpu->pc;
+        cpu->pc = addr;
+        cpu->cycles++;
+        if ((base & 0xFF00) != (addr & 0xFF00)) cpu->cycles++;
+    }
 }
-// Decrements & Increments
+
+// Jumps and Subroutines
+/*
+JMP - Jump to address
+JSR - Jump to subroutine
+RTS - Return from subroutine
+*/
+void jmp(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    cpu->pc = addr;
+}
+void jsr(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint8_t hi = (uint8_t)(((cpu->pc - 1) & 0XFF00)>>8);
+    uint8_t lo = (uint8_t)(((cpu->pc - 1) & 0X00FF));
+    bus_write(bus,(0x0100 | cpu->s--),hi);
+    bus_write(bus,(0x0100 | cpu->s--),lo);
+    cpu->pc = addr;
+}
+void rts(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    uint16_t lo = (uint16_t)bus_read(bus,(0x0100 | ++cpu->s));
+    uint16_t hi = (uint16_t)bus_read(bus,(0x0100 | ++cpu->s));
+    cpu->pc = ((hi << 8) | lo)+ 0x0001;
+}
+
+// Interrupts
+/*
+BRK - Break, go to IRQ vector, push pc, then push P, set I, jump to $FFFE
+RTI - Return from Interrupt
+*/
+void brk(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    cpu->pc++;
+
+    bus_write(bus,(0x0100 | cpu->s--),((cpu->pc >> 8) & 0xFF));
+    bus_write(bus,(0x0100 | cpu->s--),((cpu->pc) & 0xFF));
+    SET_FLAG(cpu->p,FLAG_B);
+    bus_write(bus,(0x0100 | cpu->s--),cpu->p);
+
+    SET_FLAG(cpu->p,FLAG_I);
+
+    uint16_t lo = bus_read(bus, 0xFFFE);
+    uint16_t hi = bus_read(bus, 0xFFFF);
+    cpu->pc = (hi << 8) | lo;
+}
+void rti(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    cpu->p = bus_read(bus,(0x0100 | ++cpu->s));
+    CLR_FLAG(cpu->p, FLAG_B);
+    uint16_t lo = (uint16_t)bus_read(bus,(0x0100 | ++cpu->s));
+    uint16_t hi = (uint16_t)bus_read(bus,(0x0100 | ++cpu->s));
+
+    cpu->pc = ((hi << 8) | lo);
+}
+
+
+// No Operation
+
+void nop(CPU *cpu, BUS *bus, uint16_t addr)
+{
+    // Much ado about nothing
+}
 
 //

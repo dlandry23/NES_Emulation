@@ -11,12 +11,14 @@ typedef struct CPU {
     uint8_t s; //Stack Pointer
     uint8_t p; //Status Register
     uint16_t pc; // Program Counter (address essentially)
+    
+    uint8_t cycles;
 } CPU;
 
 
 typedef struct {
-    void (*operate)(CPU*, uint16_t);
-    uint16_t (*addrmode)(CPU*,int);
+    void (*operate)(CPU*,BUS*, uint16_t);
+    uint16_t (*addrmode)(CPU*, BUS*, int);
     uint8_t cycles;
 } Instruction;
 

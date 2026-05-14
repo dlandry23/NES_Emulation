@@ -7,7 +7,7 @@ TODO
 #include <stdint.h>
 #include "6502_cpu.h"
 
-uint16_t addr_imm(CPU *cpu, int *page_cross);
+uint16_t addr_imm(CPU *cpu, BUS *bus, int *page_cross);
 uint16_t addr_zp(CPU *cpu, BUS *bus, int *page_cross);
 uint16_t addr_zpx(CPU *cpu, BUS *bus, int *page_cross);
 uint16_t addr_abs(CPU *cpu, BUS *bus, int *page_cross);

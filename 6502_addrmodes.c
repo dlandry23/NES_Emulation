@@ -24,7 +24,7 @@ absolute,Y	     oper,Y	    	3	    4*
 
 
 //Returning address LOCATIONS - NOT DATA. CPUreads are getting data from locations @ address between $0000-$FFFF (16 bit) - 0-65355
-uint16_t addr_imm(CPU *cpu,int *page_cross)     //Immediate
+uint16_t addr_imm(CPU *cpu, BUS *bus, int *page_cross)     //Immediate
 {
     return cpu->pc++;
 }
@@ -89,8 +89,12 @@ uint16_t addr_indiry(CPU *cpu, BUS *bus, int *page_cross)  // Indirect, Y
     *page_cross = ((base & 0xFF00) != (addr & 0xFF00));
     return addr;
 }
-uint16_t addr_rel(CPU *cpu, BUS *bus, int *page_cross)
+uint16_t addr_rel(CPU *cpu, BUS *bus, int *page_cross)     // Relative
 {
     int8_t offset = (int8_t)bus_read(bus,cpu->pc++);
     return (uint16_t)(cpu->pc + offset);
+}
+uint16_t addr_imp(CPU *cpu, BUS *bus, int *page_cross)     // Implied - return dummy address
+{
+    return 0x0000;
 }
