@@ -20,6 +20,12 @@ absolute,X	     oper,X	    	3	    4*
 absolute,Y	     oper,Y	    	3	    4* 
 (indirect,X)	 (oper,X)		2	    6  
 (indirect),Y     (oper),Y		2	    5* 
+relative         oper           2        3**        // Determine offset
+implied          oper           1       2       // Based on op_code
+accumulator      oper           1       2       // just use addr_imp (same implementation)
+
+* One additional cycle if page_cross
+** +1 cycle if branch taken, +1 additional if page cross (handled in branch op_codes)
 */
 
 

@@ -113,18 +113,18 @@ void pha(CPU *cpu, BUS *bus, uint16_t addr)
     bus_write(bus,(0x0100 | cpu->s--),cpu->a); //(0x0100|cpu->s) -> Stack at location 0x0100-0x01FF - 256 bits set at page 1
     //cpu->s--;
 }
-void php(CPU *cpu,BUS *bus, uint16_t addr)
+void php(CPU *cpu, BUS *bus, uint16_t addr)
 {
     SET_FLAG(cpu->p, FLAG_B);
     bus_write(bus,(0x0100 | cpu->s),cpu->p);
     cpu->s--;
 }
-void pla(CPU *cpu,BUS *bus, uint16_t addr)
+void pla(CPU *cpu, BUS *bus, uint16_t addr)
 {
     cpu->a = bus_read(bus, 0x0100 | ++cpu->s);
     set_zn(&cpu->p, cpu->a);
 }
-void plp(CPU *cpu,BUS *bus, uint16_t addr)
+void plp(CPU *cpu, BUS *bus, uint16_t addr)
 {
     cpu->p = bus_read(bus, 0x0100 | ++cpu->s);
 }
@@ -252,7 +252,7 @@ void asl(CPU *cpu, BUS *bus, uint16_t addr)
     bus_write(bus,addr,data);
     set_zn(&cpu->p,data);
 }
-void asl_a(CPU *cpu, BUS *bus, uint16_t addr) // SPECIAL CASE, JUST THE ACCUMULATOR
+void asl_a(CPU *cpu, BUS *bus, uint16_t addr)   // SPECIAL CASE, JUST THE ACCUMULATOR
 {
     (cpu->a & 0x80) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C);
     cpu->a = cpu->a << 1;
@@ -269,7 +269,7 @@ void lsr(CPU *cpu, BUS *bus, uint16_t addr)
     bus_write(bus,addr,data);
     set_zn(&cpu->p,data);
 }
-void lsr_a(CPU *cpu, BUS *bus, uint16_t addr)// SPECIAL CASE, JUST THE ACCUMULATOR
+void lsr_a(CPU *cpu, BUS *bus, uint16_t addr)   // SPECIAL CASE, JUST THE ACCUMULATOR
 {
     (cpu->a & 0x01) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting right, capture bit 0 and store in carry flag
     //CLR_FLAG(cpu->p, FLAG_N); // shifting in 0, always clear FLAG_N
@@ -287,7 +287,7 @@ void rol(CPU *cpu, BUS *bus, uint16_t addr)
     bus_write(bus,addr,data);
     set_zn(&cpu->p,data);
 }
-void rol_a (CPU *cpu, BUS *bus, uint16_t addr)// SPECIAL CASE, JUST THE ACCUMULATOR
+void rol_a (CPU *cpu, BUS *bus, uint16_t addr)  // SPECIAL CASE, JUST THE ACCUMULATOR
 {
     uint8_t old_carry = GET_FLAG(cpu->p,FLAG_C); // Store old carry, then record bit 7 to store in carry flag (0x00 or 0x01)
     (cpu->a & 0x80) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting left, capture bit 7 and store in carry flag
@@ -307,7 +307,7 @@ void ror(CPU *cpu, BUS *bus, uint16_t addr)
     bus_write(bus,addr,data);
     set_zn(&cpu->p,data);
 }
-void ror_a(CPU *cpu, BUS *bus, uint16_t addr)// SPECIAL CASE, JUST THE ACCUMULATOR
+void ror_a(CPU *cpu, BUS *bus, uint16_t addr)   // SPECIAL CASE, JUST THE ACCUMULATOR
 {
     uint8_t old_carry = GET_FLAG(cpu->p,FLAG_C); // Store old carry, then record bit 7 to store in carry flag (0x00 or 0x01)
     (cpu->a & 0x01) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting right, capture bit 0 and store in carry flag
@@ -550,10 +550,7 @@ void rti(CPU *cpu, BUS *bus, uint16_t addr)
 
 
 // No Operation
-
 void nop(CPU *cpu, BUS *bus, uint16_t addr)
 {
     // Much ado about nothing
 }
-
-//
