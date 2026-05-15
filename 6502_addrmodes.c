@@ -20,7 +20,7 @@ absolute,X	     oper,X	    	3	    4*
 absolute,Y	     oper,Y	    	3	    4* 
 (indirect,X)	 (oper,X)		2	    6  
 (indirect),Y     (oper),Y		2	    5* 
-relative         oper           2        3**        // Determine offset
+relative         oper           2       3**        // Determine offset
 implied          oper           1       2       // Based on op_code
 accumulator      oper           1       2       // just use addr_imp (same implementation)
 
@@ -103,4 +103,19 @@ uint16_t addr_rel(CPU *cpu, BUS *bus, int *page_cross)     // Relative
 uint16_t addr_imp(CPU *cpu, BUS *bus, int *page_cross)     // Implied - return dummy address
 {
     return 0x0000;
+}
+uint16_t addr_indir(CPU *cpu, BUS *bus, int *page_cross)   // Indirect Jump Resolution + bug
+{
+    uint16_t ptr_lo = (uint16_t)bus_read(bus, cpu->pc++);
+    uint16_t ptr_hi = (uint16_t)bus_read(bus, cpu->pc++);
+    uint16_t ptr    = (ptr_hi << 8) | ptr_lo;
+
+    uint16_t lo = (uint16_t)bus_read(bus, ptr);
+
+    // bug - page wrap!
+    uint16_t hi = (ptr & 0x00FF) == 0x00FF
+        ? (uint16_t)bus_read(bus, ptr & 0xFF00)   // bugged wrap
+        : (uint16_t)bus_read(bus, ptr + 1);        // normal
+
+    return (hi << 8) | lo;
 }

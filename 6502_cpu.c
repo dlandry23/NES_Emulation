@@ -20,7 +20,6 @@ read memory/->fetch next op code -> pass this to main() where it runs it
 #include "NES_file.h"
 
 void cpu_init(CPU *cpu) {
-    // TODO: initialize CPU state
     cpu->a = 0;
     cpu->x = 0;
     cpu->y = 0;
@@ -28,22 +27,6 @@ void cpu_init(CPU *cpu) {
     cpu->p = 0x24;
     cpu->pc = 0;
 }
-
-/*
-Addressing Modes Reference
----------------------------------------------------
-addressing	    assembler	  bytes   cycles
----------------------------------------------------
-immediate	     #oper	    	2	    2  
-zeropage	     oper	    	2	    3  
-zeropage,X	     oper,X	    	2	    4  
-absolute	     oper	    	3	    4  
-absolute,X	     oper,X	    	3	    4* 
-absolute,Y	     oper,Y	    	3	    4* 
-(indirect,X)	 (oper,X)		2	    6  
-(indirect),Y     (oper),Y		2	    5* 
-*/
-
 
 Instruction table[256];
 
@@ -85,8 +68,33 @@ void init_table() {
     table[0x84] = (Instruction){ sty, addr_zp, 3};
     table[0x94] = (Instruction){ sty, addr_zpx, 4};
     table[0x8C] = (Instruction){ sty, addr_abs, 4};
-    // TAX
+    // TRANSFERS IMPLIED
+    table[0xAA] = (Instruction){ tax, addr_imp, 2};
+    table[0xA8] = (Instruction){ tay, addr_imp, 2};
+    table[0xBA] = (Instruction){ tsx, addr_imp, 2};
     table[0x8A] = (Instruction){ txa, addr_imp, 2};
+    table[0x9A] = (Instruction){ txs, addr_imp, 2};
+    table[0x98] = (Instruction){ tya, addr_imp, 2};
+    // Stack Instructions
+    table[0x48] = (Instruction){ pha, addr_imp, 3};
+    table[0x08] = (Instruction){ php, addr_imp, 3};
+    table[0x68] = (Instruction){ pla, addr_imp, 3};
+    table[0x28] = (Instruction){ plp, addr_imp, 3};
+    // DEC
+    table[0xC6] = (Instruction){ dec, addr_zp, 5};
+    table[0xD6] = (Instruction){ dec, addr_zpx, 6};
+    table[0xCE] = (Instruction){ dec, addr_abs, 6};
+    table[0xDE] = (Instruction){ dec, addr_absx, 7};
+    // INC
+    table[0xE6] = (Instruction){ inc, addr_zp, 5};
+    table[0xF6] = (Instruction){ inc, addr_zpx, 6};
+    table[0xEE] = (Instruction){ inc, addr_abs, 6};
+    table[0xFE] = (Instruction){ inc, addr_absx, 7};
+    // DEC/INC X/Y
+    table[0xCA] = (Instruction){ dex, addr_imp, 2};
+    table[0x88] = (Instruction){ dey, addr_imp, 2};
+    table[0xE8] = (Instruction){ inx, addr_imp, 2};
+    table[0xC8] = (Instruction){ iny, addr_imp, 2};
     //ADC
     table[0x69] = (Instruction){ adc, addr_imm,     2};
     table[0x65] = (Instruction){ adc, addr_zp,      3};
@@ -96,7 +104,15 @@ void init_table() {
     table[0x79] = (Instruction){ adc, addr_absy,    4};
     table[0x61] = (Instruction){ adc, addr_indirx,  6};
     table[0x71] = (Instruction){ adc, addr_indiry,  5};
-
+    // SBC
+    table[0xE9] = (Instruction){ sbc, addr_imm, 2};
+    table[0xE5] = (Instruction){ sbc, addr_zp, 3};
+    table[0xF5] = (Instruction){ sbc, addr_zpx, 4};
+    table[0xED] = (Instruction){ sbc, addr_abs, 4};
+    table[0xFD] = (Instruction){ sbc, addr_absx, 4};
+    table[0xF9] = (Instruction){ sbc, addr_absy, 4};
+    table[0xE1] = (Instruction){ sbc, addr_indirx, 6};
+    table[0xF1] = (Instruction){ sbc, addr_indiry, 5};
     // AND
     table[0x29] = (Instruction){ and, addr_imm, 2};
     table[0x25] = (Instruction){ and, addr_zp, 2};
@@ -106,13 +122,98 @@ void init_table() {
     table[0x39] = (Instruction){ and, addr_absy, 3};
     table[0x21] = (Instruction){ and, addr_indirx, 2};
     table[0x31] = (Instruction){ and, addr_indiry, 2};
+    // EOR
+    table[0x49] = (Instruction){ eor, addr_imm, 2};
+    table[0x45] = (Instruction){ eor, addr_zp, 3};
+    table[0x55] = (Instruction){ eor, addr_zpx, 4};
+    table[0x4D] = (Instruction){ eor, addr_abs, 4};
+    table[0x5D] = (Instruction){ eor, addr_absx, 4};
+    table[0x59] = (Instruction){ eor, addr_absy, 4};
+    table[0x41] = (Instruction){ eor, addr_indirx, 6};
+    table[0x51] = (Instruction){ eor, addr_indiry, 5};
+    // ORA
+    table[0x09] = (Instruction){ ora, addr_imm, 2};
+    table[0x05] = (Instruction){ ora, addr_zp, 3};
+    table[0x15] = (Instruction){ ora, addr_zpx, 4};
+    table[0x0D] = (Instruction){ ora, addr_abs, 4};
+    table[0x1D] = (Instruction){ ora, addr_absx, 4};
+    table[0x19] = (Instruction){ ora, addr_absy, 4};
+    table[0x01] = (Instruction){ ora, addr_indirx, 6};
+    table[0x11] = (Instruction){ ora, addr_indiry, 5};
+    // ASL
+    table[0x0A] = (Instruction){ asl_a, addr_imp, 2};
+    table[0x06] = (Instruction){ asl, addr_zp, 5};
+    table[0x16] = (Instruction){ asl, addr_zpx, 6};
+    table[0x0E] = (Instruction){ asl, addr_abs, 6};
+    table[0x1E] = (Instruction){ asl, addr_absx, 7};
+    // LSR
+    table[0x4A] = (Instruction){ lsr_a, addr_imp, 2};
+    table[0x46] = (Instruction){ lsr, addr_zp, 5};
+    table[0x56] = (Instruction){ lsr, addr_zpx, 6};
+    table[0x4E] = (Instruction){ lsr, addr_abs, 6};
+    table[0x5E] = (Instruction){ lsr, addr_absx, 7};
+    // ROL
+    table[0x2A] = (Instruction){ rol_a, addr_imp, 2};
+    table[0x26] = (Instruction){ rol, addr_zp, 5};
+    table[0x36] = (Instruction){ rol, addr_zpx, 6};
+    table[0x2E] = (Instruction){ rol, addr_abs, 6};
+    table[0x3E] = (Instruction){ rol, addr_absx, 7};
+    // ROR
+    table[0x6A] = (Instruction){ ror_a, addr_imp, 2};
+    table[0x66] = (Instruction){ ror, addr_zp, 5};
+    table[0x76] = (Instruction){ ror, addr_zpx, 6};
+    table[0x6E] = (Instruction){ ror, addr_abs, 6};
+    table[0x7E] = (Instruction){ ror, addr_absx, 7};
+    // SETS + CLEARS
+    table[0x18] = (Instruction){ clc, addr_imp, 2};
+    table[0xD8] = (Instruction){ cld, addr_imp, 2};
+    table[0x58] = (Instruction){ cli, addr_imp, 2};
+    table[0xB8] = (Instruction){ clv, addr_imp, 2};
+    table[0x38] = (Instruction){ sec, addr_imp, 2};
+    table[0xF8] = (Instruction){ sed, addr_imp, 2};
+    table[0x78] = (Instruction){ sei, addr_imp, 2};
+    // CMP
+    table[0xC9] = (Instruction){ cmp, addr_imm, 2};
+    table[0xC5] = (Instruction){ cmp, addr_zp, 3};
+    table[0xD5] = (Instruction){ cmp, addr_zpx, 4};
+    table[0xCD] = (Instruction){ cmp, addr_abs, 4};
+    table[0xDD] = (Instruction){ cmp, addr_absx, 4};
+    table[0xD9] = (Instruction){ cmp, addr_absy, 4};
+    table[0xC1] = (Instruction){ cmp, addr_indirx, 6};
+    table[0xD1] = (Instruction){ cmp, addr_indiry, 5};
+    // CPX
+    table[0xE0] = (Instruction){ cpx, addr_imm, 2};
+    table[0xE4] = (Instruction){ cpx, addr_zp, 3};
+    table[0xEC] = (Instruction){ cpx, addr_abs, 4};
+    // CPY
+    table[0xC0] = (Instruction){ cpy, addr_imm, 2};
+    table[0xC4] = (Instruction){ cpy, addr_zp, 3};
+    table[0xCC] = (Instruction){ cpy, addr_abs, 4};
+    // BIT
+    table[0x24] = (Instruction){ bit, addr_zp, 3};
+    table[0x2C] = (Instruction){ bit, addr_abs, 4};
+    // Branches
+    table[0x90] = (Instruction){ bcc, addr_rel, 2};
+    table[0xB0] = (Instruction){ bcs, addr_rel, 2};
+    table[0xF0] = (Instruction){ beq, addr_rel, 2};
+    table[0x30] = (Instruction){ bmi, addr_rel, 2};
+    table[0xD0] = (Instruction){ bne, addr_rel, 2};
+    table[0x10] = (Instruction){ bpl, addr_rel, 2};
+    table[0x50] = (Instruction){ bvc, addr_rel, 2};
+    table[0x70] = (Instruction){ bvs, addr_rel, 2};
+    // Jumps and Returns
+    table[0x4C] = (Instruction){ jmp, addr_abs, 3};
+    table[0x6C] = (Instruction){ jmp, addr_indir, 5};
+    table[0x20] = (Instruction){ jsr, addr_abs, 6};
+    table[0x60] = (Instruction){ rts, addr_imp, 6};
+    // Interrupts
+    table[0x00] = (Instruction){ brk, addr_imp, 7};
+    table[0x40] = (Instruction){ rti, addr_imp, 6};
+    // NOP
+    table[0xEA] = (Instruction){ nop, addr_imp, 2};
 
 
 }
-
-
-
-
 
 
     /*//uint8_t *buffer = &state->memory[offset]; //Reference the memory location of state as buffer, fread into the "buffer" - use to read what is in the memory banks (particularly just last bank matters)
