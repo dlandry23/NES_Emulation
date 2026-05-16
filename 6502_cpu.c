@@ -215,14 +215,6 @@ void init_table() {
 
 }
 
-
-    /*//uint8_t *buffer = &state->memory[offset]; //Reference the memory location of state as buffer, fread into the "buffer" - use to read what is in the memory banks (particularly just last bank matters)
-    fread(buffer_rom,1,fsize,f);
-    fclose(f);
-    uint8_t prg_bnk_num = buffer_rom[4];
-    uint8_t chr_bnk_num = buffer_rom[5];
-    memcpy(&state->memory[offset],&buffer_rom[(0x4000*(prg_bnk_num-0x4))+0x10],0x10000);
-    //return buffer_rom;*/
 //Initialize Banks
 void init_banks (BUS *bus)
 {
@@ -232,7 +224,7 @@ void init_banks (BUS *bus)
 
 void cpu_step(CPU *cpu, BUS *bus)
 {
-    int page_crossed =0;
+    uint8_t page_crossed =0;
     uint8_t opcode = bus_read(bus,cpu->pc++); // Read the current byte (op_code), prepare to read the next byte (use addressing modes)
     Instruction inst = table[opcode]; // find opcode in the table
     uint16_t addr = inst.addrmode(cpu, bus, &page_crossed); // address according to addressing modes 
@@ -289,7 +281,7 @@ void bus_write (BUS *bus, uint16_t addr, uint8_t data)
         switch (addr & 0xE001) 
         {
             case 0x8000: // bank select
-                bus->mapper.bank_select = data;
+                bus->mapper->bank_select = data;
                 break;
             case 0x8001: // bank data
                 // handle bank switching

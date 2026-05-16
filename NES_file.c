@@ -10,9 +10,10 @@ NES_file.h
 // .nes file
 void NESfile_init(NESfile *rom_file)
 {
+    //rom_file->filename =  filename;
     //Initialize the file;
     FILE *f= fopen(rom_file->filename, "rb");
-    if (!f) return -1;
+    if (!f) return;
     /*if (f==NULL)
 	{
 		printf("error: Couldn't open %s\n", rom_file->filename);
@@ -29,7 +30,7 @@ void NESfile_init(NESfile *rom_file)
 
     if (fread(rom_file->header,1,0x10,f) !=0x10) // read the header - check if we got all 16 bytes, if yes, cool
     {
-        fclose(f);return -1;
+        fclose(f);return;
     }
 
     
@@ -44,14 +45,14 @@ void NESfile_init(NESfile *rom_file)
 
     if (fread(rom_file->prg_rom,1,prg_bytes,f) !=prg_bytes) // read the prg_rom
     {
-        fclose(f);return -1;
+        fclose(f);return;
     }
 
     if (fread(rom_file->chr_rom,1,chr_bytes,f) !=chr_bytes) // read the chr_rom
     {
-        fclose(f);return -1;
+        fclose(f);return;
     }
 
     fclose(f);
-    return 0;
+    return;
 }
