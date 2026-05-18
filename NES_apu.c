@@ -16,12 +16,12 @@ APU apu_init()
 uint8_t apu_read(APU *apu, uint16_t addr)
 {
     //TODO - Write this thang
-    printf("NOT IMPLEMENTED YET");
+    printf("APU READ\n");
     return 0x00;
 }
 
 void apu_write(APU *ppu, uint16_t addr, uint8_t data)
 {
-    printf("NOT IMPLEMENTED YET");
+    printf("APU WRITE\n");
     // TODO - this
 }

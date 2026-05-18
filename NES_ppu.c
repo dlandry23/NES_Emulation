@@ -15,13 +15,13 @@ PPU ppu_init()
 
 uint8_t ppu_read(PPU *ppu, uint16_t addr)
 {
-    printf("NOT IMPLEMENTED YET");
+    printf("PPU READ\n");
     return 0x00;
     //TODO - Write this thang
 }
 
 void ppu_write(PPU *ppu, uint16_t addr,uint8_t data)
 {
-    printf("NOT IMPLEMENTED YET");
+    printf("PPU WRITE\n");
     // TODO - this
 }
