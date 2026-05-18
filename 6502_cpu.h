@@ -39,7 +39,8 @@ typedef struct Instruction {
 
 //NES file initialization
 
-
+CPU cpu_init();
+BUS bus_init(NESfile *rom_file,PPU *ppu, APU *apu);
 void cpu_step(CPU *cpu, BUS *bus);
 uint8_t bus_read (BUS *bus, uint16_t addr);
 void bus_write (BUS *bus, uint16_t addr, uint8_t data);

@@ -19,13 +19,57 @@ read memory/->fetch next op code -> pass this to main() where it runs it
 #include "NES_mapper.h"
 #include "NES_file.h"
 
-void cpu_init(CPU *cpu) {
-    cpu->a = 0;
-    cpu->x = 0;
-    cpu->y = 0;
-    cpu->s = 0xFD; // top of the stack on reset
-    cpu->p = 0x24;
-    cpu->pc = 0;
+CPU cpu_init() 
+{
+    CPU cpu =
+    {
+    .a = 0x00,
+    .x = 0x00,
+    .y = 0x00,
+    .s = 0xFD, // top of the stack on reset
+    .p = 0x24,
+    .pc = 0x0000
+    };
+    return cpu;
+}
+/*
+typedef struct BUS {
+    uint8_t ram[0x0800];
+    uint8_t *prg_banks[0x04];
+    uint8_t *chr_banks[0x06];
+    struct MAPPER *mapper;
+    struct NESfile *rom_file;
+    struct PPU *ppu;
+    struct APU *apu;
+
+}BUS;
+*/
+BUS bus_init(NESfile *rom_file,PPU *ppu, APU *apu) 
+{
+    uint8_t ram[0x0800];
+    uint8_t *prg_banks[0x04];
+    uint8_t *chr_banks[0x06];
+    uint8_t R[0x08];
+    struct MAPPER mapper = 
+    {
+        .R = R,
+        .bank_select = 0,
+
+    };
+    prg_banks[0] = rom_file->prg_rom + (((rom_file->prg_rom_size/0x2000) - 4) * 0x2000);                         
+    prg_banks[1] = rom_file->prg_rom + (((rom_file->prg_rom_size/0x2000) - 3) * 0x2000);                       
+    prg_banks[2] = rom_file->prg_rom + (((rom_file->prg_rom_size/0x2000) - 2) * 0x2000);   // Second to last bank
+    prg_banks[3] = rom_file->prg_rom + (((rom_file->prg_rom_size/0x2000) - 1) * 0x2000);   // Last Bank
+    BUS bus = 
+    {
+        .ram = ram,
+        .prg_banks = prg_banks,
+        .chr_banks = chr_banks,
+        .mapper = mapper,
+        .rom_file = rom_file,
+        .ppu = ppu,
+        .apu = apu,
+    };
 }
 
 Instruction table[256];

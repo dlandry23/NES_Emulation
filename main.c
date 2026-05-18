@@ -18,10 +18,20 @@ main.c
 
 int main()
 {
-    NESfile rom = {0};
-    //rom.filename = "C:\\Users\\Lan\\Downloads\\SMB3rom.nes";
+    //NESfile rom = {0};
+    char *filename = "C:\\Users\\Lan\\Downloads\\SMB3rom.nes";
     printf("Hello Worl");
-    NESfile_init(&rom);
+    NESfile rom_file = NESfile_init(filename);
+    CPU cpu = cpu_init();
+    PPU ppu = ppu_init();
+    APU apu = apu_init();
+    BUS bus = bus_init(rom_file,ppu,apu);
+
+    while 1
+    {
+        cpu_step(cpu,bus)
+    }
+
     return 0;
 }
 

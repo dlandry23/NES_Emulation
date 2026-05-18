@@ -14,4 +14,4 @@ typedef struct NESfile {
     uint8_t mapper; // not using for now - just for future if I implement a wrapper outside of MMC3
 } NESfile;
 
-void NESfile_init(NESfile *rom_file);
+NESfile NESfile_init(char *filename);
