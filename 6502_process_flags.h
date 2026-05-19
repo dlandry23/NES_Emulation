@@ -24,6 +24,7 @@ C	Carry
 #define FLAG_N 0x07 //                      Negative
 #define FLAG_V 0x06 //                      Overflow
 //THERE IS NO VALID FLAG IN POSITION 5
+#define FLAG_5 0x05
 #define FLAG_B 0x04 //                      Break
 #define FLAG_D 0x03 //                      Decimal
 #define FLAG_I 0x02 //                      Interrupt

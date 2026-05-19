@@ -16,14 +16,13 @@ main.c
 //#include "NES_mapper.h"
 #include "NES_file.h"
 
-void log_data(FILE *logfile, CPU *cpu, BUS *bus, uint16_t pc)
+void log_data(FILE *logfile, uint8_t opcode, uint8_t a, uint8_t x, uint8_t y, uint8_t s, uint8_t p, uint16_t pc, int cycles, BUS *bus)
 {
-    char disasm[32];
-    disassemble(cpu->opcode, pc, bus, disasm, sizeof(disasm));
-
-    fprintf(logfile, "%04X  %-20s  A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%d\n",
+    char disasm[64];
+    disassemble(opcode, pc, bus, x, y, disasm, sizeof(disasm));
+    fprintf(logfile, "%04X\t%-40s\tA:%02X\tX:%02X\tY:%02X\tP:%02X\tSP:%02X\tPPU:000,000\tCYC:%d\n",
             pc, disasm,
-            cpu->a, cpu->x, cpu->y, cpu->p, cpu->s, cpu->cycles);
+            a, x, y, p, s, cycles);
 }
 
 int main()
@@ -41,13 +40,25 @@ int main()
     init_table();
     //cpu_reset(&cpu, &bus);
     // NES TEST START AT PC = $C000
-    cpu.pc = 0xC000;
+    cpu.pc      = 0xC000;
+    cpu.cycles  = 0x07;
     int i = 0;
-    while (i<1000)
+    while (i<8991)
     {
+        if (i==5003)
+        {
+            printf("Hello");
+        }
         uint16_t pc = cpu.pc;
+        int cycles = cpu.cycles;
+        uint8_t a   = cpu.a;
+        uint8_t x   = cpu.x;
+        uint8_t y   = cpu.y;
+        uint8_t p   = cpu.p;
+        uint8_t s   = cpu.s;
+        //printf("%d\n",i);
         cpu_step(&cpu,&bus);
-        log_data(logfile, &cpu, &bus, pc);
+        log_data(logfile,cpu.opcode, a, x, y, s, p, pc, cycles, &bus);
         i++;
     }
     fclose(logfile);

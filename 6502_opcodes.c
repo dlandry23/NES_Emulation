@@ -61,6 +61,7 @@ void ldy(CPU *cpu, BUS *bus, uint16_t addr)
 }
 void sta(CPU *cpu, BUS *bus, uint16_t addr)
 {
+    
     bus_write(bus,addr,cpu->a);
 }
 void stx(CPU *cpu, BUS *bus, uint16_t addr)
@@ -116,6 +117,7 @@ void pha(CPU *cpu, BUS *bus, uint16_t addr)
 void php(CPU *cpu, BUS *bus, uint16_t addr)
 {
     SET_FLAG(cpu->p, FLAG_B);
+    SET_FLAG(cpu->p, FLAG_5);
     bus_write(bus,(0x0100 | cpu->s),cpu->p);
     cpu->s--;
 }
@@ -198,10 +200,10 @@ void sbc(CPU *cpu, BUS *bus, uint16_t addr)
 {
     uint8_t carry = GET_FLAG(cpu->p,FLAG_C);
     uint8_t value = bus_read(bus, addr);
-    uint16_t sum = (uint16_t)cpu->a + (uint16_t)(~value) + carry;
+    uint16_t sum = (uint16_t)cpu->a + (uint8_t)(~value) + carry;
 
     //Overflow (V)
-    ((~(cpu->a ^ sum) & (~value ^ sum) & 0x80) != 0) ? SET_FLAG(cpu->p,FLAG_V) : CLR_FLAG(cpu->p, FLAG_V);
+    (((cpu->a ^ sum) & (~value ^ sum) & 0x80) != 0) ? SET_FLAG(cpu->p,FLAG_V) : CLR_FLAG(cpu->p, FLAG_V);
 
     cpu->a = sum & 0xFF;
     //Status Flag Updates
@@ -365,21 +367,21 @@ CPY - Compare Memory with Y
 void cmp(CPU *cpu, BUS *bus, uint16_t addr)
 {
     uint8_t data = bus_read(bus,addr);
-    uint16_t sum = (uint16_t)cpu->a + (uint16_t)(~data) + 1;
+    uint16_t sum = (uint16_t)cpu->a + (uint8_t)(~data) + 1;
     set_zn(&cpu->p, sum & 0xFF);
     (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
 }
 void cpx(CPU *cpu, BUS *bus, uint16_t addr)
 {
     uint8_t data = bus_read(bus,addr);
-    uint16_t sum = (uint16_t)cpu->x + (uint16_t)(~data) + 1;
+    uint16_t sum = (uint16_t)cpu->x + (uint8_t)(~data) + 1;
     set_zn(&cpu->p, sum & 0xFF);
     (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
 }
 void cpy(CPU *cpu, BUS *bus, uint16_t addr)
 {
     uint8_t data = bus_read(bus,addr);
-    uint16_t sum = (uint16_t)cpu->y + (uint16_t)(~data) + 1;
+    uint16_t sum = (uint16_t)cpu->y + (uint8_t)(~data) + 1;
     set_zn(&cpu->p, sum & 0xFF);
     (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
 }

@@ -17,7 +17,7 @@ typedef struct CPU {
     uint8_t p; //Status Register
     uint16_t pc; // Program Counter (address essentially)
     
-    uint8_t cycles;
+    int cycles;
     uint8_t opcode;
     char *opcode_asm;
 } CPU;
@@ -61,7 +61,7 @@ void bus_write (BUS *bus, uint16_t addr, uint8_t data);
 void init_banks (BUS *bus);
 void bank_switch(BUS *bus,uint8_t data);
 void init_table();
-void disassemble(uint8_t opcode, uint16_t pc, BUS *bus, char *out, size_t out_size);
+void disassemble(uint8_t opcode, uint16_t pc, BUS *bus, uint8_t x, uint8_t y, char *out, size_t out_size);
 //uint8_t cpu_read(uint16_t);
 //void cpu_write(uint16_t,uint8_);
 #endif
