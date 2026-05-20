@@ -45,10 +45,10 @@ int main()
     int i = 0;
     while (i<8991)
     {
-        if (i==5003)
+        /*if (i==5003)
         {
             printf("Hello");
-        }
+        }*/
         uint16_t pc = cpu.pc;
         int cycles = cpu.cycles;
         uint8_t a   = cpu.a;

@@ -556,3 +556,152 @@ void nop(CPU *cpu, BUS *bus, uint16_t addr)
 {
     // Much ado about nothing
 }
+
+// Illegal OPCODES
+void alr(CPU *cpu, BUS *bus, uint16_t addr) //AND with OPERAND, then LSR
+{
+    uint8_t data = bus_read(bus,addr);
+    cpu->a = cpu->a & data;
+    set_zn(&cpu->p, cpu->a);
+
+    (cpu->a & 0x01) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting right, capture bit 0 and store in carry flag
+    //CLR_FLAG(cpu->p, FLAG_N); // shifting in 0, always clear FLAG_N
+    cpu->a = cpu->a >> 1;
+    set_zn(&cpu->p,cpu->a);
+}
+
+void anc(CPU* cpu, BUS *bus, uint16_t addr) // AND + set C as ASL
+{
+    uint8_t data = bus_read(bus,addr);
+    cpu->a = cpu->a & data;
+    set_zn(&cpu->p, cpu->a);
+    (data & 0x80) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C);
+}
+void anc2(CPU* cpu, BUS *bus, uint16_t addr)// AND + set C as ROL -- identical to anc
+{
+    uint8_t data = bus_read(bus,addr);
+    cpu->a = cpu->a & data;
+    set_zn(&cpu->p, cpu->a);
+    (data & 0x80) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C);
+}
+//void ane(CPU* cpu, BUS *bus, uint16_t addr); unstable don't implement
+//void arr(CPU* cpu, BUS *bus, uint16_t addr); NOT IN NESTEST
+void dcp(CPU* cpu, BUS *bus, uint16_t addr) // Decrement, then compare to accumulator
+{
+    uint8_t data = bus_read(bus,addr);
+    data--;
+    bus_write(bus,addr, data);
+    set_zn(&cpu->p, data);
+
+    uint16_t sum = (uint16_t)cpu->a + (uint8_t)(~data) + 1;
+    set_zn(&cpu->p, sum & 0xFF);
+    (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
+}
+
+void isb(CPU* cpu, BUS *bus, uint16_t addr) //increment the operator, then sbc oper M + 1 -> M, A - M - C̅ -> A
+{
+    uint8_t data = bus_read(bus,addr);
+    data++;
+    bus_write(bus,addr,data);
+    set_zn(&cpu->p,data);
+
+    uint8_t carry = GET_FLAG(cpu->p,FLAG_C);
+    uint16_t sum = (uint16_t)cpu->a + (uint8_t)(~data) + carry;
+
+    //Overflow (V)
+    (((cpu->a ^ sum) & (~data ^ sum) & 0x80) != 0) ? SET_FLAG(cpu->p,FLAG_V) : CLR_FLAG(cpu->p, FLAG_V);
+
+    cpu->a = sum & 0xFF;
+    //Status Flag Updates
+    set_zn(&cpu->p,cpu->a);
+    //Carry (C)
+    (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
+}
+//void las(CPU* cpu, BUS *bus, uint16_t addr); not implemented
+void lax(CPU* cpu, BUS *bus, uint16_t addr) // LDA  then LDX
+{
+    cpu->a = bus_read(bus,addr);
+    set_zn(&cpu->p, cpu->a);
+
+    cpu->x = bus_read(bus,addr);
+    set_zn(&cpu->p, cpu->x);
+}
+//void lxa(CPU* cpu, BUS *bus, uint16_t addr); not implemented
+void rla(CPU* cpu, BUS *bus, uint16_t addr) // ROL + AND
+{
+    uint8_t data = bus_read(bus,addr);
+    uint8_t old_carry = GET_FLAG(cpu->p,FLAG_C); // Store old carry, then record bit 7 to store in carry flag (0x00 or 0x01)
+    (data & 0x80) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting left, capture bit 7 and store in carry flag
+
+    data = (data << 1) | old_carry;
+
+    bus_write(bus,addr,data);
+    set_zn(&cpu->p,data);
+
+    cpu->a = cpu->a & data;
+    set_zn(&cpu->p, cpu->a);
+
+}
+void rra(CPU* cpu, BUS *bus, uint16_t addr) // ROR + ADC
+{
+    uint8_t data = bus_read(bus,addr);
+    uint8_t old_carry = GET_FLAG(cpu->p,FLAG_C); // Store old carry, then record bit 7 to store in carry flag (0x00 or 0x01)
+    (data & 0x01) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting right, capture bit 0 and store in carry flag
+
+    data = (data >> 1) | (old_carry << 7);
+
+    bus_write(bus,addr,data);
+    set_zn(&cpu->p,data);
+
+    uint8_t carry = GET_FLAG(cpu->p,FLAG_C);
+    uint16_t sum = cpu->a + data + carry;
+
+    //Overflow (V)
+    ((~(cpu->a ^ data) & (cpu->a ^ sum) & 0x80) != 0) ? SET_FLAG(cpu->p,FLAG_V) : CLR_FLAG(cpu->p, FLAG_V);
+
+    cpu->a = sum & 0xFF;
+    //Status Flag Updates
+    set_zn(&cpu->p,cpu->a);
+    //Carry (C)
+    (sum>0xFF) ? SET_FLAG(cpu->p,FLAG_C) : CLR_FLAG(cpu->p, FLAG_C); // Ternary Expression -> condition ? expression-true : expression-false
+
+}
+void sax(CPU* cpu, BUS *bus, uint16_t addr) // actually new -> A and X stored at in M
+{
+    uint8_t data = cpu->a & cpu->x;
+    bus_write(bus,addr,data);
+}
+//void sbx(CPU* cpu, BUS *bus, uint16_t addr);
+//void sha(CPU* cpu, BUS *bus, uint16_t addr);
+//void shx(CPU* cpu, BUS *bus, uint16_t addr);
+//void shy(CPU* cpu, BUS *bus, uint16_t addr);
+void slo(CPU* cpu, BUS *bus, uint16_t addr) // ASL + ORA
+{
+    uint8_t data = bus_read(bus,addr);
+    (data & 0x80) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting left, capture bit 7 and store in carry flag
+
+    data = data << 1;
+
+    bus_write(bus,addr,data);
+    set_zn(&cpu->p,data);
+
+
+    cpu->a = cpu->a | data;
+    set_zn(&cpu->p, cpu->a);
+}
+void sre(CPU* cpu, BUS *bus, uint16_t addr) // LSR + EOR
+{
+    uint8_t data = bus_read(bus,addr);
+    (data & 0x01) ? SET_FLAG(cpu->p,FLAG_C)  : CLR_FLAG(cpu->p, FLAG_C); // Shifting right, capture bit 0 and store in carry flag
+    //CLR_FLAG(cpu->p, FLAG_N); // Shifting right in 0, always clear flag_N
+
+    data = data >> 1;
+
+    bus_write(bus,addr,data);
+    set_zn(&cpu->p,data);
+
+    cpu->a = cpu->a ^ data;
+    set_zn(&cpu->p, cpu->a);
+}
+//void tas(CPU* cpu, BUS *bus, uint16_t addr);
+//void usbc(CPU* cpu, BUS *bus, uint16_t addr) //Equal to SBC immediate instr. E9 - will deal with it that way in the table...

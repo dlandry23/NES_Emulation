@@ -10,6 +10,7 @@ read memory/->fetch next op code -> pass this to main() where it runs it
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "6502_cpu.h"
 #include "6502_opcodes.h"
@@ -18,6 +19,16 @@ read memory/->fetch next op code -> pass this to main() where it runs it
 //#include "NES_apu.h"
 //#include "NES_mapper.h"
 //#include "NES_file.h"
+
+bool contains(uint8_t arr[], int size, uint8_t target) {
+    for (int i = 0; i < size; i++) {
+        if (arr[i] == target) {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 CPU cpu_init() 
 {
@@ -309,12 +320,12 @@ void init_table() {
     table[0x7C] = (Instruction){ nop, addr_absx, 4};
     table[0xDC] = (Instruction){ nop, addr_absx, 4};
     table[0xFC] = (Instruction){ nop, addr_absx, 4};
-    /*
+    // ILLEGAL OPCODES
     table[0x4B] = (Instruction){ alr, addr_imm, 2};
     table[0x0B] = (Instruction){ anc, addr_imm, 2};
-    table[0x2B] = (Instruction){ anc, addr_imm, 2};
-    table[0x8B] = (Instruction){ ane, addr_imm, 2};
-    table[0x6B] = (Instruction){ arr, addr_imm, 2};
+    table[0x2B] = (Instruction){ anc2, addr_imm, 2};
+    //table[0x8B] = (Instruction){ ane, addr_imm, 2};
+    //table[0x6B] = (Instruction){ arr, addr_imm, 2};
     table[0xC7] = (Instruction){ dcp, addr_zp, 5};
     table[0xD7] = (Instruction){ dcp, addr_zpx, 6};
     table[0xCF] = (Instruction){ dcp, addr_abs, 6};
@@ -322,21 +333,21 @@ void init_table() {
     table[0xDB] = (Instruction){ dcp, addr_absy, 7};
     table[0xC3] = (Instruction){ dcp, addr_indirx, 8};
     table[0xD3] = (Instruction){ dcp, addr_indiry, 8};
-    table[0xE7] = (Instruction){ isc, addr_zp, 5};
-    table[0xF7] = (Instruction){ isc, addr_zpx, 6};
-    table[0xEF] = (Instruction){ isc, addr_abs, 6};
-    table[0xFF] = (Instruction){ isc, addr_absx, 7};
-    table[0xFB] = (Instruction){ isc, addr_absy, 7};
-    table[0xE3] = (Instruction){ isc, addr_indirx, 8};
-    table[0xF3] = (Instruction){ isc, addr_indiry, 8};
-    table[0xBB] = (Instruction){ las, addr_absy, 4};
+    table[0xE7] = (Instruction){ isb, addr_zp, 5};
+    table[0xF7] = (Instruction){ isb, addr_zpx, 6};
+    table[0xEF] = (Instruction){ isb, addr_abs, 6};
+    table[0xFF] = (Instruction){ isb, addr_absx, 7};
+    table[0xFB] = (Instruction){ isb, addr_absy, 7};
+    table[0xE3] = (Instruction){ isb, addr_indirx, 8};
+    table[0xF3] = (Instruction){ isb, addr_indiry, 8};
+    //table[0xBB] = (Instruction){ las, addr_absy, 4};
     table[0xA7] = (Instruction){ lax, addr_zp, 3};
     table[0xB7] = (Instruction){ lax, addr_zpy, 4};
     table[0xAF] = (Instruction){ lax, addr_abs, 4};
     table[0xBF] = (Instruction){ lax, addr_absy, 4};
     table[0xA3] = (Instruction){ lax, addr_indirx, 6};
     table[0xB3] = (Instruction){ lax, addr_indiry, 5};
-    table[0xAB] = (Instruction){ lxa, addr_imm, 2};
+    //table[0xAB] = (Instruction){ lxa, addr_imm, 2};
     table[0x27] = (Instruction){ rla, addr_zp, 5};
     table[0x37] = (Instruction){ rla, addr_zpx, 6};
     table[0x2F] = (Instruction){ rla, addr_abs, 6};
@@ -355,11 +366,11 @@ void init_table() {
     table[0x97] = (Instruction){ sax, addr_zpy, 4};
     table[0x8F] = (Instruction){ sax, addr_abs, 4};
     table[0x83] = (Instruction){ sax, addr_indirx, 6};
-    table[0xCB] = (Instruction){ sbx, addr_imm, 2};
-    table[0x9F] = (Instruction){ sha, addr_absy, 5};
-    table[0x93] = (Instruction){ sha, addr_indiry, 6};
-    table[0x9E] = (Instruction){ shx, addr_absy, 5};
-    table[0x9C] = (Instruction){ shy, addr_absx, 5};
+    //table[0xCB] = (Instruction){ sbx, addr_imm, 2};
+    //table[0x9F] = (Instruction){ sha, addr_absy, 5};
+    //table[0x93] = (Instruction){ sha, addr_indiry, 6};
+    //table[0x9E] = (Instruction){ shx, addr_absy, 5};
+    //table[0x9C] = (Instruction){ shy, addr_absx, 5};
     table[0x07] = (Instruction){ slo, addr_zp, 5};
     table[0x17] = (Instruction){ slo, addr_zpx, 6};
     table[0x0F] = (Instruction){ slo, addr_abs, 6};
@@ -374,9 +385,8 @@ void init_table() {
     table[0x5B] = (Instruction){ sre, addr_absy, 7};
     table[0x43] = (Instruction){ sre, addr_indirx, 8};
     table[0x53] = (Instruction){ sre, addr_indiry, 8};
-    table[0x9B] = (Instruction){ tas, addr_absy, 5};
-    table[0xEB] = (Instruction){ usbc, addr_imm, 2};
-    */
+    //table[0x9B] = (Instruction){ tas, addr_absy, 5};
+    table[0xEB] = (Instruction){ sbc, addr_imm, 2};
 
 
 
@@ -391,7 +401,8 @@ void init_banks (BUS *bus)
 }
     */
 //CPU STEP
-
+uint8_t no_page_cross[] = {0x9D,0x99,0xDF,0xDB,0xD3,0xFF,0xFB,0xF3,0X7F,0x7B,0x73,0x3F,0x5F,0x5B,0x53,0x3B,0x33,0x1F,0x1B,0x13};
+int npc_size = sizeof(no_page_cross);
 void cpu_step(CPU *cpu, BUS *bus)
 {
     uint8_t page_crossed =0;
@@ -399,9 +410,10 @@ void cpu_step(CPU *cpu, BUS *bus)
     /*cpu->opcode_asm = disassemble(cpu->opcode).name;
     printf("OP:%02X OP_ASM:%s\n",cpu->opcode,cpu->opcode_asm);*/
     Instruction inst = table[cpu->opcode]; // find opcode   
-    printf("%02X\n",cpu->opcode);
+    //printf("%02X\n",cpu->opcode);
     uint16_t addr = inst.addrmode(cpu, bus, &page_crossed); // address according to addressing modes 
-    if ((cpu->opcode == 0x9D) || (cpu->opcode == 0x99)) page_crossed = 0;
+
+    if (contains(no_page_cross,npc_size,cpu->opcode)) page_crossed = 0;
     cpu->cycles     += inst.cycles;
     cpu->cycles     += page_crossed;
     inst.operate(cpu,bus,addr); // tick up the cycles if need
@@ -1221,6 +1233,408 @@ void disassemble(uint8_t opcode, uint16_t pc, BUS *bus, uint8_t x, uint8_t y, ch
         // NOP
         case 0xEA: snprintf(out, out_size, "%02X             NOP",               opcode);                       break;
 
+
+
+        // ---- ILLEGAL OPCODES ----
+ 
+        // NOP variants (implied)
+        case 0x1A:
+        case 0x3A:
+        case 0x5A:
+        case 0x7A:
+        case 0xDA:
+        case 0xFA:
+            snprintf(out, out_size, "%02X             NOP*",              opcode);                       break;
+ 
+        // NOP variants (immediate)
+        case 0x80:
+        case 0x82:
+        case 0x89:
+        case 0xC2:
+        case 0xE2:
+            snprintf(out, out_size, "%02X %02X        NOP* #$%02X",                   opcode, op1, op1);        break;
+ 
+        // NOP variants (zero page)
+        case 0x04:
+        case 0x44:
+        case 0x64:
+        {
+            uint8_t val = bus_read(bus, op1);
+            snprintf(out, out_size, "%02X %02X        NOP* $%02X = %02X",             opcode, op1, op1, val);   break;
+        }
+ 
+        // NOP variants (zero page, X)
+        case 0x14:
+        case 0x34:
+        case 0x54:
+        case 0x74:
+        case 0xD4:
+        case 0xF4:
+        {
+            uint8_t  eff = (op1 + x) & 0xFF;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        NOP* $%02X,X @ %02X = %02X",   opcode, op1, op1, eff, val); break;
+        }
+ 
+        // NOP variants (absolute)
+        case 0x0C:
+        {
+            uint8_t val = bus_read(bus, abs_addr);
+            snprintf(out, out_size, "%02X %02X %02X   NOP* $%04X = %02X",            opcode, op1, op2, abs_addr, val); break;
+        }
+ 
+        // NOP variants (absolute, X)
+        case 0x1C:
+        case 0x3C:
+        case 0x5C:
+        case 0x7C:
+        case 0xDC:
+        case 0xFC:
+        {
+            uint16_t eff = abs_addr + x;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   NOP* $%04X,X @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+ 
+        // ALR #imm  (AND #imm then LSR A)
+        case 0x4B:
+            snprintf(out, out_size, "%02X %02X        ALR* #$%02X",                  opcode, op1, op1);        break;
+ 
+        // ANC #imm
+        case 0x0B:
+            snprintf(out, out_size, "%02X %02X        ANC* #$%02X",                  opcode, op1, op1);        break;
+ 
+        // ANC2 #imm
+        case 0x2B:
+            snprintf(out, out_size, "%02X %02X        ANC2* #$%02X",                 opcode, op1, op1);        break;
+ 
+        // DCP  (DEC then CMP)
+        case 0xC7:
+        {
+            uint8_t val = bus_read(bus, op1);
+            snprintf(out, out_size, "%02X %02X        DCP* $%02X = %02X",            opcode, op1, op1, val);   break;
+        }
+        case 0xD7:
+        {
+            uint8_t  eff = (op1 + x) & 0xFF;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        DCP* $%02X,X @ %02X = %02X",   opcode, op1, op1, eff, val); break;
+        }
+        case 0xCF:
+        {
+            uint8_t val = bus_read(bus, abs_addr);
+            snprintf(out, out_size, "%02X %02X %02X   DCP* $%04X = %02X",            opcode, op1, op2, abs_addr, val); break;
+        }
+        case 0xDF:
+        {
+            uint16_t eff = abs_addr + x;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   DCP* $%04X,X @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0xDB:
+        {
+            uint16_t eff = abs_addr + y;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   DCP* $%04X,Y @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0xC3:
+        {
+            uint8_t  zp  = (op1 + x) & 0xFF;
+            uint16_t eff = (bus_read(bus, (zp + 1) & 0xFF) << 8) | bus_read(bus, zp);
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        DCP* ($%02X,X) @ %02X = %04X = %02X", opcode, op1, op1, zp, eff, val); break;
+        }
+        case 0xD3:
+        {
+            uint16_t base = (bus_read(bus, (op1 + 1) & 0xFF) << 8) | bus_read(bus, op1);
+            uint16_t eff  = base + y;
+            uint8_t  val  = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        DCP* ($%02X),Y = %04X @ %04X = %02X", opcode, op1, op1, base, eff, val); break;
+        }
+ 
+        // ISC  (INC then SBC)
+        case 0xE7:
+        {
+            uint8_t val = bus_read(bus, op1);
+            snprintf(out, out_size, "%02X %02X        ISC* $%02X = %02X",            opcode, op1, op1, val);   break;
+        }
+        case 0xF7:
+        {
+            uint8_t  eff = (op1 + x) & 0xFF;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        ISC* $%02X,X @ %02X = %02X",   opcode, op1, op1, eff, val); break;
+        }
+        case 0xEF:
+        {
+            uint8_t val = bus_read(bus, abs_addr);
+            snprintf(out, out_size, "%02X %02X %02X   ISC* $%04X = %02X",            opcode, op1, op2, abs_addr, val); break;
+        }
+        case 0xFF:
+        {
+            uint16_t eff = abs_addr + x;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   ISC* $%04X,X @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0xFB:
+        {
+            uint16_t eff = abs_addr + y;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   ISC* $%04X,Y @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0xE3:
+        {
+            uint8_t  zp  = (op1 + x) & 0xFF;
+            uint16_t eff = (bus_read(bus, (zp + 1) & 0xFF) << 8) | bus_read(bus, zp);
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        ISC* ($%02X,X) @ %02X = %04X = %02X", opcode, op1, op1, zp, eff, val); break;
+        }
+        case 0xF3:
+        {
+            uint16_t base = (bus_read(bus, (op1 + 1) & 0xFF) << 8) | bus_read(bus, op1);
+            uint16_t eff  = base + y;
+            uint8_t  val  = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        ISC* ($%02X),Y = %04X @ %04X = %02X", opcode, op1, op1, base, eff, val); break;
+        }
+ 
+        // LAX  (LDA + LDX)
+        case 0xA7:
+        {
+            uint8_t val = bus_read(bus, op1);
+            snprintf(out, out_size, "%02X %02X        LAX* $%02X = %02X",            opcode, op1, op1, val);   break;
+        }
+        case 0xB7:
+        {
+            uint8_t  eff = (op1 + y) & 0xFF;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        LAX* $%02X,Y @ %02X = %02X",   opcode, op1, op1, eff, val); break;
+        }
+        case 0xAF:
+        {
+            uint8_t val = bus_read(bus, abs_addr);
+            snprintf(out, out_size, "%02X %02X %02X   LAX* $%04X = %02X",            opcode, op1, op2, abs_addr, val); break;
+        }
+        case 0xBF:
+        {
+            uint16_t eff = abs_addr + y;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   LAX* $%04X,Y @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0xA3:
+        {
+            uint8_t  zp  = (op1 + x) & 0xFF;
+            uint16_t eff = (bus_read(bus, (zp + 1) & 0xFF) << 8) | bus_read(bus, zp);
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        LAX* ($%02X,X) @ %02X = %04X = %02X", opcode, op1, op1, zp, eff, val); break;
+        }
+        case 0xB3:
+        {
+            uint16_t base = (bus_read(bus, (op1 + 1) & 0xFF) << 8) | bus_read(bus, op1);
+            uint16_t eff  = base + y;
+            uint8_t  val  = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        LAX* ($%02X),Y = %04X @ %04X = %02X", opcode, op1, op1, base, eff, val); break;
+        }
+ 
+        // RLA  (ROL then AND)
+        case 0x27:
+        {
+            uint8_t val = bus_read(bus, op1);
+            snprintf(out, out_size, "%02X %02X        RLA* $%02X = %02X",            opcode, op1, op1, val);   break;
+        }
+        case 0x37:
+        {
+            uint8_t  eff = (op1 + x) & 0xFF;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        RLA* $%02X,X @ %02X = %02X",   opcode, op1, op1, eff, val); break;
+        }
+        case 0x2F:
+        {
+            uint8_t val = bus_read(bus, abs_addr);
+            snprintf(out, out_size, "%02X %02X %02X   RLA* $%04X = %02X",            opcode, op1, op2, abs_addr, val); break;
+        }
+        case 0x3F:
+        {
+            uint16_t eff = abs_addr + x;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   RLA* $%04X,X @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0x3B:
+        {
+            uint16_t eff = abs_addr + y;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   RLA* $%04X,Y @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0x23:
+        {
+            uint8_t  zp  = (op1 + x) & 0xFF;
+            uint16_t eff = (bus_read(bus, (zp + 1) & 0xFF) << 8) | bus_read(bus, zp);
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        RLA* ($%02X,X) @ %02X = %04X = %02X", opcode, op1, op1, zp, eff, val); break;
+        }
+        case 0x33:
+        {
+            uint16_t base = (bus_read(bus, (op1 + 1) & 0xFF) << 8) | bus_read(bus, op1);
+            uint16_t eff  = base + y;
+            uint8_t  val  = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        RLA* ($%02X),Y = %04X @ %04X = %02X", opcode, op1, op1, base, eff, val); break;
+        }
+ 
+        // RRA  (ROR then ADC)
+        case 0x67:
+        {
+            uint8_t val = bus_read(bus, op1);
+            snprintf(out, out_size, "%02X %02X        RRA* $%02X = %02X",            opcode, op1, op1, val);   break;
+        }
+        case 0x77:
+        {
+            uint8_t  eff = (op1 + x) & 0xFF;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        RRA* $%02X,X @ %02X = %02X",   opcode, op1, op1, eff, val); break;
+        }
+        case 0x6F:
+        {
+            uint8_t val = bus_read(bus, abs_addr);
+            snprintf(out, out_size, "%02X %02X %02X   RRA* $%04X = %02X",            opcode, op1, op2, abs_addr, val); break;
+        }
+        case 0x7F:
+        {
+            uint16_t eff = abs_addr + x;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   RRA* $%04X,X @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0x7B:
+        {
+            uint16_t eff = abs_addr + y;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   RRA* $%04X,Y @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0x63:
+        {
+            uint8_t  zp  = (op1 + x) & 0xFF;
+            uint16_t eff = (bus_read(bus, (zp + 1) & 0xFF) << 8) | bus_read(bus, zp);
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        RRA* ($%02X,X) @ %02X = %04X = %02X", opcode, op1, op1, zp, eff, val); break;
+        }
+        case 0x73:
+        {
+            uint16_t base = (bus_read(bus, (op1 + 1) & 0xFF) << 8) | bus_read(bus, op1);
+            uint16_t eff  = base + y;
+            uint8_t  val  = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        RRA* ($%02X),Y = %04X @ %04X = %02X", opcode, op1, op1, base, eff, val); break;
+        }
+ 
+        // SAX  (store A & X)
+        case 0x87:
+        {
+            uint8_t val = bus_read(bus, op1);
+            snprintf(out, out_size, "%02X %02X        SAX* $%02X = %02X",            opcode, op1, op1, val);   break;
+        }
+        case 0x97:
+        {
+            uint8_t  eff = (op1 + y) & 0xFF;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        SAX* $%02X,Y @ %02X = %02X",   opcode, op1, op1, eff, val); break;
+        }
+        case 0x8F:
+        {
+            uint8_t val = bus_read(bus, abs_addr);
+            snprintf(out, out_size, "%02X %02X %02X   SAX* $%04X = %02X",            opcode, op1, op2, abs_addr, val); break;
+        }
+        case 0x83:
+        {
+            uint8_t  zp  = (op1 + x) & 0xFF;
+            uint16_t eff = (bus_read(bus, (zp + 1) & 0xFF) << 8) | bus_read(bus, zp);
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        SAX* ($%02X,X) @ %02X = %04X = %02X", opcode, op1, op1, zp, eff, val); break;
+        }
+ 
+        // SLO  (ASL then ORA)
+        case 0x07:
+        {
+            uint8_t val = bus_read(bus, op1);
+            snprintf(out, out_size, "%02X %02X        SLO* $%02X = %02X",            opcode, op1, op1, val);   break;
+        }
+        case 0x17:
+        {
+            uint8_t  eff = (op1 + x) & 0xFF;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        SLO* $%02X,X @ %02X = %02X",   opcode, op1, op1, eff, val); break;
+        }
+        case 0x0F:
+        {
+            uint8_t val = bus_read(bus, abs_addr);
+            snprintf(out, out_size, "%02X %02X %02X   SLO* $%04X = %02X",            opcode, op1, op2, abs_addr, val); break;
+        }
+        case 0x1F:
+        {
+            uint16_t eff = abs_addr + x;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   SLO* $%04X,X @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0x1B:
+        {
+            uint16_t eff = abs_addr + y;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   SLO* $%04X,Y @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0x03:
+        {
+            uint8_t  zp  = (op1 + x) & 0xFF;
+            uint16_t eff = (bus_read(bus, (zp + 1) & 0xFF) << 8) | bus_read(bus, zp);
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        SLO* ($%02X,X) @ %02X = %04X = %02X", opcode, op1, op1, zp, eff, val); break;
+        }
+        case 0x13:
+        {
+            uint16_t base = (bus_read(bus, (op1 + 1) & 0xFF) << 8) | bus_read(bus, op1);
+            uint16_t eff  = base + y;
+            uint8_t  val  = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        SLO* ($%02X),Y = %04X @ %04X = %02X", opcode, op1, op1, base, eff, val); break;
+        }
+ 
+        // SRE  (LSR then EOR)
+        case 0x47:
+        {
+            uint8_t val = bus_read(bus, op1);
+            snprintf(out, out_size, "%02X %02X        SRE* $%02X = %02X",            opcode, op1, op1, val);   break;
+        }
+        case 0x57:
+        {
+            uint8_t  eff = (op1 + x) & 0xFF;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        SRE* $%02X,X @ %02X = %02X",   opcode, op1, op1, eff, val); break;
+        }
+        case 0x4F:
+        {
+            uint8_t val = bus_read(bus, abs_addr);
+            snprintf(out, out_size, "%02X %02X %02X   SRE* $%04X = %02X",            opcode, op1, op2, abs_addr, val); break;
+        }
+        case 0x5F:
+        {
+            uint16_t eff = abs_addr + x;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   SRE* $%04X,X @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0x5B:
+        {
+            uint16_t eff = abs_addr + y;
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X %02X   SRE* $%04X,Y @ %04X = %02X",  opcode, op1, op2, abs_addr, eff, val); break;
+        }
+        case 0x43:
+        {
+            uint8_t  zp  = (op1 + x) & 0xFF;
+            uint16_t eff = (bus_read(bus, (zp + 1) & 0xFF) << 8) | bus_read(bus, zp);
+            uint8_t  val = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        SRE* ($%02X,X) @ %02X = %04X = %02X", opcode, op1, op1, zp, eff, val); break;
+        }
+        case 0x53:
+        {
+            uint16_t base = (bus_read(bus, (op1 + 1) & 0xFF) << 8) | bus_read(bus, op1);
+            uint16_t eff  = base + y;
+            uint8_t  val  = bus_read(bus, eff);
+            snprintf(out, out_size, "%02X %02X        SRE* ($%02X),Y = %04X @ %04X = %02X", opcode, op1, op1, base, eff, val); break;
+        }
+ 
         default:   snprintf(out, out_size, "%02X             ???",               opcode);                       break;
     }
 }

@@ -82,3 +82,24 @@ void rti(CPU *cpu, BUS *bus, uint16_t addr);
 // No Operation
 void nop(CPU *cpu, BUS *bus, uint16_t addr);
 // CONTINUE ON DOWN FOR ALL (organize by function type to make it easier to read)
+void alr(CPU *cpu, BUS *bus, uint16_t addr);
+void anc(CPU* cpu, BUS *bus, uint16_t addr);
+void anc2(CPU* cpu, BUS *bus, uint16_t addr);
+//void ane(CPU* cpu, BUS *bus, uint16_t addr);
+//void arr(CPU* cpu, BUS *bus, uint16_t addr);
+void dcp(CPU* cpu, BUS *bus, uint16_t addr);
+void isb(CPU* cpu, BUS *bus, uint16_t addr);
+//void las(CPU* cpu, BUS *bus, uint16_t addr);
+void lax(CPU* cpu, BUS *bus, uint16_t addr);
+//void lxa(CPU* cpu, BUS *bus, uint16_t addr);
+void rla(CPU* cpu, BUS *bus, uint16_t addr);
+void rra(CPU* cpu, BUS *bus, uint16_t addr);
+void sax(CPU* cpu, BUS *bus, uint16_t addr);
+//void sbx(CPU* cpu, BUS *bus, uint16_t addr);
+//void sha(CPU* cpu, BUS *bus, uint16_t addr);
+//void shx(CPU* cpu, BUS *bus, uint16_t addr);
+//void shy(CPU* cpu, BUS *bus, uint16_t addr);
+void slo(CPU* cpu, BUS *bus, uint16_t addr);
+void sre(CPU* cpu, BUS *bus, uint16_t addr);
+//void tas(CPU* cpu, BUS *bus, uint16_t addr);
+void usbc(CPU* cpu, BUS *bus, uint16_t addr);
